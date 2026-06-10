@@ -42,16 +42,9 @@ export function createInitialState() {
 }
 
 export function getInitialState() {
-  const saved = loadState();
-  if (!saved) return createInitialState();
-
-  if (!saved.drawLocked) {
-    saved.players = saved.players.map((p, i) => ({
-      ...p,
-      name: DEFAULT_PLAYER_NAMES[i] ?? p.name,
-    }));
-  }
-  return saved;
+  // Initial state is now loaded asynchronously in App.jsx
+  // Return default state which will be replaced once Firebase data loads
+  return createInitialState();
 }
 
 function createDrawPools() {
@@ -150,6 +143,10 @@ function getAffectedPlayerIds(state, teamA, teamB) {
 
 export function reducer(state, action) {
   switch (action.type) {
+    case 'SET_STATE': {
+      return action.payload;
+    }
+
     case 'SET_PLAYER_NAMES': {
       const players = state.players.map((p, i) => ({
         ...p,

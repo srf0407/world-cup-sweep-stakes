@@ -118,6 +118,8 @@ export default function Admin({ state, dispatch }) {
   const [activeGroup, setActiveGroup] = useState('All');
   const [knockout, setKnockout] = useState(EMPTY_KNOCKOUT);
   const [error, setError] = useState('');
+  const [resetPassword, setResetPassword] = useState('');
+  const [resetConfirm, setResetConfirm] = useState(false);
 
   const handlePinSubmit = (e) => {
     e.preventDefault();
@@ -126,6 +128,36 @@ export default function Admin({ state, dispatch }) {
       setError('');
     } else {
       setError('Incorrect PIN');
+    }
+  };
+
+  const handleReset = (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (!resetPassword) {
+      setError('Enter reset password');
+      return;
+    }
+
+    if (!resetConfirm) {
+      setError('Check the confirmation box');
+      return;
+    }
+
+    // You can change this password - it's separate from the admin PIN
+    const RESET_PASSWORD = 'reset123';
+    if (resetPassword !== RESET_PASSWORD) {
+      setError('Incorrect reset password');
+      return;
+    }
+
+    if (window.confirm('⚠️ This will delete ALL data: draw, matches, points, everything. This cannot be undone. Continue?')) {
+      dispatch({ type: 'RESET_ALL' });
+      setResetPassword('');
+      setResetConfirm(false);
+      setError('');
+      alert('✅ All data has been reset');
     }
   };
 
@@ -405,6 +437,39 @@ export default function Admin({ state, dispatch }) {
           </ul>
         </div>
       )}
+
+      <div className="reset-section admin-reset-section">
+        <h3>⚠️ Danger Zone</h3>
+        <p className="section__subtitle">Reset all data (draw, matches, scores, points)</p>
+        <form className="reset-form" onSubmit={handleReset}>
+          <label>
+            Reset Password
+            <input
+              type="password"
+              placeholder="Enter reset password"
+              value={resetPassword}
+              onChange={(e) => setResetPassword(e.target.value)}
+              className="input"
+              autoComplete="off"
+            />
+          </label>
+
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={resetConfirm}
+              onChange={(e) => setResetConfirm(e.target.checked)}
+            />
+            I understand this will delete all data permanently
+          </label>
+
+          {error && <p className="error-msg">{error}</p>}
+
+          <button type="submit" className="btn btn--danger btn--full">
+            Reset Everything
+          </button>
+        </form>
+      </div>
     </section>
   );
 }

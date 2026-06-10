@@ -1,6 +1,6 @@
 import { useReducer, useEffect, useState } from 'react';
 import { reducer, getInitialState } from './utils/reducer';
-import { saveState } from './utils/storage';
+import { saveState, loadState, onStateChange } from './utils/storage';
 import TabBar from './components/TabBar';
 import Leaderboard from './components/Leaderboard';
 import PlayerCards from './components/PlayerCards';
@@ -14,10 +14,37 @@ import './App.css';
 export default function App() {
   const [state, dispatch] = useReducer(reducer, null, getInitialState);
   const [activeTab, setActiveTab] = useState('leaderboard');
+  const [initialized, setInitialized] = useState(false);
 
+  // Load initial state from Firebase
   useEffect(() => {
+    const initializeState = async () => {
+      const savedState = await loadState();
+      if (savedState) {
+        // Dispatch an action to set the entire state
+        dispatch({ type: 'SET_STATE', payload: savedState });
+      }
+      setInitialized(true);
+    };
+    initializeState();
+  }, []);
+
+  // Listen for real-time updates from Firebase
+  useEffect(() => {
+    if (!initialized) return;
+    
+    const unsubscribe = onStateChange((updatedState) => {
+      dispatch({ type: 'SET_STATE', payload: updatedState });
+    });
+
+    return () => unsubscribe();
+  }, [initialized]);
+
+  // Save state to Firebase whenever it changes
+  useEffect(() => {
+    if (!initialized) return;
     saveState(state);
-  }, [state]);
+  }, [state, initialized]);
 
   const renderTab = () => {
     switch (activeTab) {
