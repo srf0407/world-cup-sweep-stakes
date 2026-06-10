@@ -85,6 +85,7 @@ export function calculateMatchPoints({
 }
 
 export function getPlayerTotal(teams, playerTeams) {
+  if (!teams || !playerTeams || !Array.isArray(playerTeams)) return 0;
   return playerTeams.reduce((sum, team) => sum + (teams[team]?.points || 0), 0);
 }
 

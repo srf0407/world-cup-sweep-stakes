@@ -50,6 +50,16 @@ export default function App() {
   }, [state, initialized]);
 
   const renderTab = () => {
+    if (!initialized || !state) {
+      return (
+        <section className="section">
+          <header className="section__header">
+            <h2>Loading...</h2>
+          </header>
+        </section>
+      );
+    }
+
     switch (activeTab) {
       case 'leaderboard':
         return <Leaderboard state={state} dispatch={dispatch} />;
