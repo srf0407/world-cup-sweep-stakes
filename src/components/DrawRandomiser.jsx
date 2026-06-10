@@ -92,6 +92,69 @@ export default function DrawRandomiser({ state, dispatch }) {
   const assignmentsThisPot = 8 - remainingInPot;
   const canSelectPlayer = (player) => !drawComplete && !playerHasTierTeam(player, activeTier);
 
+  const renderPlayerBoard = () => (
+    <div className="draw-progress-board draw-progress-board--sticky">
+      <h4>Live assignments</h4>
+      <div className="draw-results">
+        {state.players.map((player, index) => {
+          const isSelected = index === selectedPlayerIndex && !drawComplete;
+          const isSelectable = canSelectPlayer(player);
+          const hasPotTeam = playerHasTierTeam(player, activeTier);
+          const teams = player.teams ?? [];
+
+          return (
+            <div
+              key={player.id}
+              role={isSelectable ? 'button' : undefined}
+              tabIndex={isSelectable ? 0 : undefined}
+              className={[
+                'draw-player-result',
+                isSelected ? 'draw-player-result--active' : '',
+                isSelectable ? 'draw-player-result--selectable' : '',
+                hasPotTeam && !drawComplete ? 'draw-player-result--done-pot' : '',
+              ].filter(Boolean).join(' ')}
+              onClick={isSelectable ? () => handleSelectPlayer(index) : undefined}
+              onKeyDown={
+                isSelectable
+                  ? (e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleSelectPlayer(index);
+                      }
+                    }
+                  : undefined
+              }
+            >
+              <div className="draw-player-result__header">
+                <h3>{player.name}</h3>
+                <span className="draw-player-result__count">{teams.length}/6</span>
+              </div>
+              <ul className="draw-player-result__teams">
+                {teams.length > 0 ? (
+                  teams.map((team) => (
+                    <li
+                      key={team}
+                      className={
+                        getTierForTeam(team) === activeTier && !drawComplete
+                          ? 'draw-player-result__team--current-pot'
+                          : ''
+                      }
+                    >
+                      <span className="draw-player-result__tier">T{getTierForTeam(team)}</span>
+                      {team}
+                    </li>
+                  ))
+                ) : (
+                  <li className="muted">No teams yet</li>
+                )}
+              </ul>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
   return (
     <section className="section">
       <header className="section__header">
@@ -101,6 +164,8 @@ export default function DrawRandomiser({ state, dispatch }) {
           {!drawComplete && currentPlayer && ` · Selected: ${currentPlayer.name}`}
         </p>
       </header>
+
+      {renderPlayerBoard()}
 
       {progress.lastReveal && (
         <div className={`draw-reveal-banner ${showReveal ? 'draw-reveal-banner--pulse' : ''}`}>
@@ -138,7 +203,7 @@ export default function DrawRandomiser({ state, dispatch }) {
           {TIERS[activeTier].map((team) => {
             const drawn = !progress.pools[activeTier]?.includes(team);
             const owner = drawn
-              ? state.players.find((p) => p.teams.includes(team))
+              ? state.players.find((p) => (p.teams ?? []).includes(team))
               : null;
             return (
               <span
@@ -148,45 +213,6 @@ export default function DrawRandomiser({ state, dispatch }) {
                 {team}
                 {owner && <span className="draw-pot-team__owner">→ {owner.name}</span>}
               </span>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="draw-progress-board">
-        <h4>All players</h4>
-        <div className="draw-results">
-          {state.players.map((player, index) => {
-            const isSelected = index === selectedPlayerIndex && !drawComplete;
-            const isSelectable = canSelectPlayer(player);
-            const hasPotTeam = playerHasTierTeam(player, activeTier);
-
-            return (
-            <button
-              key={player.id}
-              type="button"
-              className={[
-                'draw-player-result',
-                isSelected ? 'draw-player-result--active' : '',
-                isSelectable ? 'draw-player-result--selectable' : '',
-                hasPotTeam && !drawComplete ? 'draw-player-result--done-pot' : '',
-              ].filter(Boolean).join(' ')}
-              onClick={() => isSelectable && handleSelectPlayer(index)}
-              disabled={!isSelectable}
-            >
-              <h3>{player.name}</h3>
-              <ul>
-                {(player.teams?.length ?? 0) > 0 ? (
-                  (player.teams ?? []).map((team) => (
-                    <li key={team}>
-                      {team}
-                    </li>
-                  ))
-                ) : (
-                  <li className="muted">—</li>
-                )}
-              </ul>
-            </button>
             );
           })}
         </div>

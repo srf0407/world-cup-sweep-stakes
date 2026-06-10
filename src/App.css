@@ -687,6 +687,67 @@
   margin-bottom: 1.25rem;
 }
 
+.draw-progress-board--sticky {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--bg);
+  padding: 1rem 0;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.draw-progress-board--sticky h4 {
+  margin-bottom: 0.75rem;
+}
+
+.draw-player-result__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.draw-player-result__count {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+  flex-shrink: 0;
+}
+
+.draw-player-result__teams {
+  list-style: none;
+  font-size: 0.85rem;
+  min-height: 1.5rem;
+}
+
+.draw-player-result__teams li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0;
+}
+
+.draw-player-result__tier {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--bg-elevated);
+  border-radius: 4px;
+  padding: 0.1rem 0.3rem;
+  flex-shrink: 0;
+}
+
+.draw-player-result__team--current-pot {
+  color: var(--gold);
+  font-weight: 600;
+}
+
 .draw-pot-teams h4,
 .draw-progress-board h4 {
   font-size: 0.85rem;
@@ -752,11 +813,11 @@
 }
 
 .draw-player-result--done-pot {
-  opacity: 0.55;
+  border-style: dashed;
 }
 
-.draw-player-result:disabled {
-  cursor: default;
+.draw-player-result--done-pot .draw-player-result__header h3 {
+  color: var(--text-muted);
 }
 
 .draw-actions {
@@ -867,7 +928,7 @@
 .draw-player-result h3 {
   color: var(--gold);
   font-size: 0.95rem;
-  margin-bottom: 0.5rem;
+  margin: 0;
 }
 
 .draw-player-result ul {
