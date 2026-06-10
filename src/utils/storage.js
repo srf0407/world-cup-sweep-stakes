@@ -3,6 +3,19 @@ import { database } from '../firebase';
 
 const STATE_PATH = 'worldcup-sweepstake-state';
 
+function serializeForFirebase(value) {
+  if (value === undefined) return undefined;
+  if (value === null || typeof value !== 'object') return value;
+  if (Array.isArray(value)) return value.map(serializeForFirebase);
+  const result = {};
+  for (const [key, val] of Object.entries(value)) {
+    if (val !== undefined) {
+      result[key] = serializeForFirebase(val);
+    }
+  }
+  return result;
+}
+
 export async function loadState() {
   try {
     const snapshot = await get(ref(database, STATE_PATH));
@@ -16,7 +29,7 @@ export async function loadState() {
 
 export async function saveState(state) {
   try {
-    await set(ref(database, STATE_PATH), state);
+    await set(ref(database, STATE_PATH), serializeForFirebase(state));
   } catch (error) {
     console.error('Error saving state to Firebase:', error);
   }

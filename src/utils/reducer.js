@@ -97,7 +97,7 @@ export function normalizeState(state) {
   if (!state || typeof state !== 'object') return createInitialState();
 
   const defaults = createInitialState();
-  return {
+  const normalized = {
     ...defaults,
     ...state,
     players: normalizePlayers(state.players),
@@ -106,8 +106,12 @@ export function normalizeState(state) {
     drawLocked: Boolean(state.drawLocked),
     roundsPlayed: state.roundsPlayed || {},
     lastUpdatedPlayerIds: toArray(state.lastUpdatedPlayerIds),
-    drawProgress: normalizeDrawProgress(state.drawProgress),
   };
+  const drawProgress = normalizeDrawProgress(state.drawProgress);
+  if (drawProgress) {
+    normalized.drawProgress = drawProgress;
+  }
+  return normalized;
 }
 
 export function getInitialState() {
@@ -293,14 +297,16 @@ export function reducer(state, action) {
 
     case 'LOCK_DRAW': {
       if (state.drawLocked || !isDrawComplete(state.players)) return state;
-      return { ...state, drawLocked: true, drawProgress: undefined };
+      const { drawProgress: _drawProgress, ...rest } = state;
+      return { ...rest, drawLocked: true };
     }
 
     case 'RESET_DRAW': {
       if (state.drawLocked) return state;
       const players = state.players.map((p) => ({ ...p, teams: [] }));
       const teams = assignOwners(players, createInitialTeams());
-      return { ...state, players, teams, drawProgress: undefined };
+      const { drawProgress: _drawProgress, ...rest } = state;
+      return { ...rest, players, teams };
     }
 
     case 'ADD_MATCH': {
