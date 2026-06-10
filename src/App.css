@@ -727,6 +727,38 @@
   box-shadow: 0 0 0 1px var(--gold-dim);
 }
 
+.draw-select-hint {
+  margin: 0 0 0.75rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.draw-player-result--selectable {
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+}
+
+.draw-player-result--selectable:hover:not(:disabled) {
+  border-color: var(--gold-dim);
+}
+
+.draw-player-result--selectable:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.draw-player-result--done-pot {
+  opacity: 0.55;
+}
+
+.draw-player-result:disabled {
+  cursor: default;
+}
+
 .draw-actions {
   display: flex;
   justify-content: center;

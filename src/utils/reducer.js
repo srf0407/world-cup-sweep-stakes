@@ -132,6 +132,20 @@ function isDrawComplete(players) {
   return players.every((p) => p.teams.length === 6);
 }
 
+function playerHasTierTeam(player, tier) {
+  return (player.teams ?? []).some((team) => getTierForTeam(team) === tier);
+}
+
+function findNextEligiblePlayerIndex(players, tier, afterIndex = -1) {
+  for (let i = 1; i <= players.length; i++) {
+    const index = (afterIndex + i) % players.length;
+    if (!playerHasTierTeam(players[index], tier)) {
+      return index;
+    }
+  }
+  return afterIndex;
+}
+
 function buildRoundsPlayed(matches) {
   const roundsPlayed = {};
   for (const match of matches) {
@@ -245,6 +259,23 @@ export function reducer(state, action) {
       };
     }
 
+    case 'SET_DRAW_PLAYER': {
+      if (state.drawLocked || !state.drawProgress) return state;
+
+      const { playerIndex } = action;
+      const { activeTier } = state.drawProgress;
+      const player = state.players[playerIndex];
+      if (!player || playerHasTierTeam(player, activeTier)) return state;
+
+      return {
+        ...state,
+        drawProgress: {
+          ...state.drawProgress,
+          nextPlayerIndex: playerIndex,
+        },
+      };
+    }
+
     case 'ASSIGN_NEXT_TEAM': {
       if (state.drawLocked || !state.drawProgress) return state;
 
@@ -252,13 +283,17 @@ export function reducer(state, action) {
       const pool = pools[activeTier];
       if (!pool?.length) return state;
 
+      const playerIndex = action.playerIndex ?? nextPlayerIndex;
+      const player = state.players[playerIndex];
+      if (!player || playerHasTierTeam(player, activeTier)) return state;
+
       const pickIndex = Math.floor(Math.random() * pool.length);
       const team = pool[pickIndex];
       const newPool = pool.filter((_, i) => i !== pickIndex);
-      const playerName = state.players[nextPlayerIndex].name;
+      const playerName = player.name;
 
       const players = state.players.map((p, i) => {
-        if (i !== nextPlayerIndex) return p;
+        if (i !== playerIndex) return p;
         const teams = [...p.teams, team].sort(
           (a, b) => getTierForTeam(a) - getTierForTeam(b)
         );
@@ -268,13 +303,15 @@ export function reducer(state, action) {
       const teams = assignOwners(players, state.teams);
       const drawComplete = isDrawComplete(players);
 
-      let nextIndex = nextPlayerIndex;
+      let nextIndex = playerIndex;
       let nextTier = activeTier;
       if (!drawComplete) {
-        nextIndex = nextPlayerIndex + 1;
-        if (nextIndex >= players.length) {
-          nextIndex = 0;
+        if (newPool.length > 0) {
+          nextTier = activeTier;
+          nextIndex = findNextEligiblePlayerIndex(players, activeTier, playerIndex);
+        } else if (activeTier < 6) {
           nextTier = activeTier + 1;
+          nextIndex = findNextEligiblePlayerIndex(players, nextTier, -1);
         }
       }
 
@@ -284,7 +321,7 @@ export function reducer(state, action) {
         teams,
         drawProgress: {
           activeTier: drawComplete ? activeTier : nextTier,
-          nextPlayerIndex: drawComplete ? nextPlayerIndex : nextIndex,
+          nextPlayerIndex: drawComplete ? playerIndex : nextIndex,
           pools: { ...pools, [activeTier]: newPool },
           lastReveal: { playerName, team, tier: activeTier },
           complete: drawComplete,

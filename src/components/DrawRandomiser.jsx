@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { DEFAULT_PLAYER_NAMES, TIERS } from '../data/teams';
+import { DEFAULT_PLAYER_NAMES, TIERS, getTierForTeam } from '../data/teams';
 
 const POT_LABELS = {
   1: 'Pot 1 — Top Seeds',
@@ -17,10 +17,17 @@ export default function DrawRandomiser({ state, dispatch }) {
   const hasDraw = (state.players[0]?.teams?.length ?? 0) > 0;
 
   const handleDrawClick = () => {
-    dispatch({ type: 'ASSIGN_NEXT_TEAM' });
+    dispatch({ type: 'ASSIGN_NEXT_TEAM', playerIndex: progress.nextPlayerIndex });
     setShowReveal(true);
     setTimeout(() => setShowReveal(false), 1500);
   };
+
+  const handleSelectPlayer = (playerIndex) => {
+    dispatch({ type: 'SET_DRAW_PLAYER', playerIndex });
+  };
+
+  const playerHasTierTeam = (player, tier) =>
+    (player.teams ?? []).some((team) => getTierForTeam(team) === tier);
 
   if (state.drawLocked && hasDraw) {
     return (
@@ -78,10 +85,12 @@ export default function DrawRandomiser({ state, dispatch }) {
   }
 
   const drawComplete = progress.complete || state.players.every((p) => (p.teams?.length ?? 0) === 6);
-  const currentPlayer = drawComplete ? null : state.players[progress.nextPlayerIndex];
+  const selectedPlayerIndex = progress.nextPlayerIndex;
+  const currentPlayer = drawComplete ? null : state.players[selectedPlayerIndex];
   const activeTier = progress.activeTier;
   const remainingInPot = progress.pools[activeTier]?.length ?? 0;
   const assignmentsThisPot = 8 - remainingInPot;
+  const canSelectPlayer = (player) => !drawComplete && !playerHasTierTeam(player, activeTier);
 
   return (
     <section className="section">
@@ -89,7 +98,7 @@ export default function DrawRandomiser({ state, dispatch }) {
         <h2>{POT_LABELS[activeTier] || `Pot ${activeTier}`}</h2>
         <p className="section__subtitle">
           Assignment {assignmentsThisPot + 1} of 8 in this pot
-          {!drawComplete && currentPlayer && ` · Next: ${currentPlayer.name}`}
+          {!drawComplete && currentPlayer && ` · Selected: ${currentPlayer.name}`}
         </p>
       </header>
 
@@ -114,9 +123,13 @@ export default function DrawRandomiser({ state, dispatch }) {
             className="btn btn--primary btn--large draw-btn"
             onClick={handleDrawClick}
           >
-            🎲 Draw Team for {currentPlayer.name}
+            Draw Team for {currentPlayer.name}
           </button>
         </div>
+      )}
+
+      {!drawComplete && (
+        <p className="draw-select-hint">Tap a player below to choose who draws next</p>
       )}
 
       <div className="draw-pot-teams">
@@ -143,15 +156,28 @@ export default function DrawRandomiser({ state, dispatch }) {
       <div className="draw-progress-board">
         <h4>All players</h4>
         <div className="draw-results">
-          {state.players.map((player) => (
-            <div
+          {state.players.map((player, index) => {
+            const isSelected = index === selectedPlayerIndex && !drawComplete;
+            const isSelectable = canSelectPlayer(player);
+            const hasPotTeam = playerHasTierTeam(player, activeTier);
+
+            return (
+            <button
               key={player.id}
-              className={`draw-player-result ${player.id === currentPlayer?.id && !drawComplete ? 'draw-player-result--active' : ''}`}
+              type="button"
+              className={[
+                'draw-player-result',
+                isSelected ? 'draw-player-result--active' : '',
+                isSelectable ? 'draw-player-result--selectable' : '',
+                hasPotTeam && !drawComplete ? 'draw-player-result--done-pot' : '',
+              ].filter(Boolean).join(' ')}
+              onClick={() => isSelectable && handleSelectPlayer(index)}
+              disabled={!isSelectable}
             >
               <h3>{player.name}</h3>
               <ul>
-                {player.teams.length > 0 ? (
-                  player.teams.map((team) => (
+                {(player.teams?.length ?? 0) > 0 ? (
+                  (player.teams ?? []).map((team) => (
                     <li key={team}>
                       {team}
                     </li>
@@ -160,8 +186,9 @@ export default function DrawRandomiser({ state, dispatch }) {
                   <li className="muted">—</li>
                 )}
               </ul>
-            </div>
-          ))}
+            </button>
+            );
+          })}
         </div>
       </div>
 
