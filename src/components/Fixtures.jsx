@@ -17,6 +17,9 @@ function TeamLine({ name }) {
 export default function Fixtures({ state }) {
   const [activeGroup, setActiveGroup] = useState('All');
 
+  if (!state) return null;
+  const matches = state.matches ?? [];
+
   const filtered =
     activeGroup === 'All'
       ? GROUP_FIXTURES
@@ -55,7 +58,7 @@ export default function Fixtures({ state }) {
 
       <div className="fixtures-list">
         {sorted.map((fixture, i) => {
-          const result = findMatchResult(state.matches, fixture.team1, fixture.team2);
+          const result = findMatchResult(matches, fixture.team1, fixture.team2);
           const played = Boolean(result);
 
           return (
@@ -83,11 +86,11 @@ export default function Fixtures({ state }) {
         })}
       </div>
 
-      {state.matches.filter((m) => m.round !== 'Group Stage').length > 0 && (
+      {matches.filter((m) => m.round !== 'Group Stage').length > 0 && (
         <div className="knockout-section">
           <h3>Knockout Matches</h3>
           <div className="fixtures-list">
-            {state.matches
+            {matches
               .filter((m) => m.round !== 'Group Stage')
               .map((match) => (
                 <div key={match.id} className="fixture-row fixture-row--played">

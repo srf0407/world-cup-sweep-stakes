@@ -14,7 +14,7 @@ export default function DrawRandomiser({ state, dispatch }) {
   if (!state || !state.players) return null;
   const [showReveal, setShowReveal] = useState(false);
   const progress = state.drawProgress;
-  const hasDraw = state.players[0]?.teams.length > 0;
+  const hasDraw = (state.players[0]?.teams?.length ?? 0) > 0;
 
   const handleDrawClick = () => {
     dispatch({ type: 'ASSIGN_NEXT_TEAM' });
@@ -35,7 +35,7 @@ export default function DrawRandomiser({ state, dispatch }) {
             <div key={player.id} className="draw-player-result">
               <h3>{player.name}</h3>
               <ul>
-                {player.teams.map((team) => (
+                {(player.teams ?? []).map((team) => (
                   <li key={team}>
                     {getFlag(team)} {team}
                   </li>
@@ -77,7 +77,7 @@ export default function DrawRandomiser({ state, dispatch }) {
     );
   }
 
-  const drawComplete = progress.complete || state.players.every((p) => p.teams.length === 6);
+  const drawComplete = progress.complete || state.players.every((p) => (p.teams?.length ?? 0) === 6);
   const currentPlayer = drawComplete ? null : state.players[progress.nextPlayerIndex];
   const activeTier = progress.activeTier;
   const remainingInPot = progress.pools[activeTier]?.length ?? 0;

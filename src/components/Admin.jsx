@@ -113,7 +113,6 @@ function FixtureResultRow({ fixture, existing, dispatch }) {
 }
 
 export default function Admin({ state, dispatch }) {
-  if (!state || !state.matches) return null;
   const [pin, setPin] = useState('');
   const [authenticated, setAuthenticated] = useState(false);
   const [activeGroup, setActiveGroup] = useState('All');
@@ -121,6 +120,8 @@ export default function Admin({ state, dispatch }) {
   const [error, setError] = useState('');
   const [resetPassword, setResetPassword] = useState('');
   const [resetConfirm, setResetConfirm] = useState(false);
+
+  if (!state?.matches) return null;
 
   const handlePinSubmit = (e) => {
     e.preventDefault();

@@ -41,18 +41,72 @@ export function createInitialState() {
   };
 }
 
-export function normalizeState(state) {
-  if (!state) return createInitialState();
-  
-  // Ensure all required properties exist with defaults
+function toArray(value) {
+  if (Array.isArray(value)) return value;
+  if (value && typeof value === 'object') {
+    return Object.keys(value)
+      .sort((a, b) => Number(a) - Number(b))
+      .map((key) => value[key])
+      .filter(Boolean);
+  }
+  return [];
+}
+
+function normalizePlayers(players) {
+  const list = toArray(players);
+  if (list.length === 0) {
+    return DEFAULT_PLAYER_NAMES.map((name, i) => ({
+      id: i + 1,
+      name,
+      teams: [],
+    }));
+  }
+  return list.map((player, i) => ({
+    id: player?.id ?? i + 1,
+    name: player?.name ?? DEFAULT_PLAYER_NAMES[i] ?? `Player ${i + 1}`,
+    teams: Array.isArray(player?.teams) ? player.teams : [],
+  }));
+}
+
+function normalizeTeams(teams) {
+  const initial = createInitialTeams();
+  if (!teams || typeof teams !== 'object') return initial;
+  const normalized = { ...initial };
+  for (const team of ALL_TEAMS) {
+    if (teams[team]) {
+      normalized[team] = { ...initial[team], ...teams[team] };
+    }
+  }
+  return normalized;
+}
+
+function normalizeDrawProgress(drawProgress) {
+  if (!drawProgress || typeof drawProgress !== 'object') return undefined;
+  const pools = drawProgress.pools || {};
+  const normalizedPools = {};
+  for (let tier = 1; tier <= 6; tier++) {
+    normalizedPools[tier] = Array.isArray(pools[tier]) ? pools[tier] : [];
+  }
   return {
-    players: state.players || [],
-    teams: state.teams || createInitialTeams(),
-    matches: Array.isArray(state.matches) ? state.matches : [],
+    ...drawProgress,
+    pools: normalizedPools,
+  };
+}
+
+export function normalizeState(state) {
+  if (!state || typeof state !== 'object') return createInitialState();
+
+  const defaults = createInitialState();
+  return {
+    ...defaults,
+    ...state,
+    players: normalizePlayers(state.players),
+    teams: normalizeTeams(state.teams),
+    matches: toArray(state.matches),
     drawLocked: Boolean(state.drawLocked),
     roundsPlayed: state.roundsPlayed || {},
-    lastUpdatedPlayerIds: state.lastUpdatedPlayerIds || [],
-    drawProgress: state.drawProgress || undefined,
+    lastUpdatedPlayerIds: toArray(state.lastUpdatedPlayerIds),
+    drawProgress: normalizeDrawProgress(state.drawProgress),
   };
 }
 
