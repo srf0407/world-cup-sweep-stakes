@@ -7,57 +7,6 @@ export const TIERS = {
   6: ['New Zealand', 'Haiti', 'Ghana', 'Curacao', 'Cape Verde', 'Uzbekistan', 'Tunisia', 'Jordan'],
 };
 
-export const TEAM_FLAGS = {
-  France: '🇫🇷',
-  Mexico: '🇲🇽',
-  Switzerland: '🇨🇭',
-  Algeria: '🇩🇿',
-  Scotland: '🏴󠁧󠁢󠁳󠁣󠁴󠁿',
-  'New Zealand': '🇳🇿',
-  Spain: '🇪🇸',
-  Uruguay: '🇺🇾',
-  Turkey: '🇹🇷',
-  Egypt: '🇪🇬',
-  Czechia: '🇨🇿',
-  Haiti: '🇭🇹',
-  Argentina: '🇦🇷',
-  Norway: '🇳🇴',
-  Japan: '🇯🇵',
-  Sweden: '🇸🇪',
-  'South Africa': '🇿🇦',
-  Curacao: '🇨🇼',
-  England: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-  Belgium: '🇧🇪',
-  Iran: '🇮🇷',
-  Canada: '🇨🇦',
-  Iraq: '🇮🇶',
-  Ghana: '🇬🇭',
-  Portugal: '🇵🇹',
-  USA: '🇺🇸',
-  Ecuador: '🇪🇨',
-  'Ivory Coast': '🇨🇮',
-  Qatar: '🇶🇦',
-  'Cape Verde': '🇨🇻',
-  Brazil: '🇧🇷',
-  Morocco: '🇲🇦',
-  'South Korea': '🇰🇷',
-  Paraguay: '🇵🇾',
-  Uzbekistan: '🇺🇿',
-  Bosnia: '🇧🇦',
-  Holland: '🇳🇱',
-  Croatia: '🇭🇷',
-  Austria: '🇦🇹',
-  Australia: '🇦🇺',
-  Tunisia: '🇹🇳',
-  Jordan: '🇯🇴',
-  Germany: '🇩🇪',
-  Colombia: '🇨🇴',
-  Senegal: '🇸🇳',
-  Panama: '🇵🇦',
-  'DR Congo': '🇨🇩',
-  'Saudi Arabia': '🇸🇦',
-};
-
 export const NAME_ALIASES = {
   Holland: 'Netherlands',
   Czechia: 'Czech Republic',
@@ -77,10 +26,6 @@ export function toFixtureName(team) {
 
 export function fromFixtureName(name) {
   return REVERSE_ALIASES[name] || name;
-}
-
-export function getFlag(team) {
-  return TEAM_FLAGS[team] || '⚽';
 }
 
 export function getTierForTeam(team) {

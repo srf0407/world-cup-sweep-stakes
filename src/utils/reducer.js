@@ -150,11 +150,6 @@ function recalcAllTeams(state) {
 
   for (const match of state.matches) {
     const rp = buildRoundsPlayed(state.matches.filter((m) => m.id < match.id));
-    const isFirstInRound =
-      match.round !== 'Group Stage' &&
-      match.isFirstInRound !== false &&
-      (!rp[match.teamA]?.[match.round] || !rp[match.teamB]?.[match.round]);
-
     const result = calculateMatchPoints({
       teamA: match.teamA,
       teamB: match.teamB,
@@ -164,7 +159,9 @@ function recalcAllTeams(state) {
       penaltyWinner: match.penaltyWinner,
       round: match.round,
       roundsPlayed: rp,
-      isFirstInRound,
+      isFirstInRound: match.isFirstInRound,
+      advanceBonusA: match.advanceBonusA,
+      advanceBonusB: match.advanceBonusB,
     });
 
     for (const [team, pts, gf, ga] of [
@@ -320,10 +317,13 @@ export function reducer(state, action) {
         round,
         fixtureId,
         isFirstInRound,
+        advanceBonusA,
+        advanceBonusB,
       } = action;
 
       if (teamA === teamB) return state;
 
+      const isKnockout = round !== 'Group Stage';
       const match = {
         id: state.matches.length + 1,
         teamA,
@@ -333,7 +333,9 @@ export function reducer(state, action) {
         penalties: Boolean(penalties),
         penaltyWinner: penalties ? penaltyWinner : null,
         round,
-        isFirstInRound: round !== 'Group Stage' ? isFirstInRound !== false : false,
+        isFirstInRound: isKnockout ? isFirstInRound !== false : false,
+        advanceBonusA: isKnockout ? advanceBonusA !== false : false,
+        advanceBonusB: isKnockout ? advanceBonusB !== false : false,
         fixtureId: fixtureId || null,
         timestamp: new Date().toISOString(),
       };
@@ -363,8 +365,11 @@ export function reducer(state, action) {
         penaltyWinner,
         round,
         isFirstInRound,
+        advanceBonusA,
+        advanceBonusB,
       } = action;
 
+      const isKnockout = round !== 'Group Stage';
       const matches = state.matches.map((m) =>
         m.id === matchId
           ? {
@@ -376,7 +381,9 @@ export function reducer(state, action) {
               penalties: Boolean(penalties),
               penaltyWinner: penalties ? penaltyWinner : null,
               round,
-              isFirstInRound: round !== 'Group Stage' ? isFirstInRound !== false : false,
+              isFirstInRound: isKnockout ? isFirstInRound !== false : false,
+              advanceBonusA: isKnockout ? advanceBonusA !== false : false,
+              advanceBonusB: isKnockout ? advanceBonusB !== false : false,
               timestamp: new Date().toISOString(),
             }
           : m

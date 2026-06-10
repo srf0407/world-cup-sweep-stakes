@@ -8,6 +8,8 @@ export function calculateMatchPoints({
   round,
   roundsPlayed = {},
   isFirstInRound = false,
+  advanceBonusA,
+  advanceBonusB,
 }) {
   const marginA = scoreA - scoreB;
   const marginB = scoreB - scoreA;
@@ -59,12 +61,21 @@ export function calculateMatchPoints({
   if (marginB >= 4) pointsB += 1;
 
   const advanceBonus = { teamA: 0, teamB: 0 };
-  if (round !== 'Group Stage' && isFirstInRound) {
-    if (!roundsPlayed[teamA]?.[round]) {
+  if (round !== 'Group Stage') {
+    const wantA =
+      advanceBonusA !== undefined
+        ? advanceBonusA
+        : isFirstInRound !== false && !roundsPlayed[teamA]?.[round];
+    const wantB =
+      advanceBonusB !== undefined
+        ? advanceBonusB
+        : isFirstInRound !== false && !roundsPlayed[teamB]?.[round];
+
+    if (wantA && !roundsPlayed[teamA]?.[round]) {
       pointsA += 1;
       advanceBonus.teamA = 1;
     }
-    if (!roundsPlayed[teamB]?.[round]) {
+    if (wantB && !roundsPlayed[teamB]?.[round]) {
       pointsB += 1;
       advanceBonus.teamB = 1;
     }

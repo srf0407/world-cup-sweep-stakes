@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { DEFAULT_PLAYER_NAMES, TIERS, getFlag } from '../data/teams';
+import { DEFAULT_PLAYER_NAMES, TIERS } from '../data/teams';
 
 const POT_LABELS = {
   1: 'Pot 1 — Top Seeds',
@@ -37,7 +37,7 @@ export default function DrawRandomiser({ state, dispatch }) {
               <ul>
                 {(player.teams ?? []).map((team) => (
                   <li key={team}>
-                    {getFlag(team)} {team}
+                    {team}
                   </li>
                 ))}
               </ul>
@@ -98,7 +98,7 @@ export default function DrawRandomiser({ state, dispatch }) {
           <span className="draw-reveal-banner__player">{progress.lastReveal.playerName}</span>
           <span className="draw-reveal-banner__arrow">→</span>
           <span className="draw-reveal-banner__team">
-            {getFlag(progress.lastReveal.team)} {progress.lastReveal.team}
+            {progress.lastReveal.team}
           </span>
         </div>
       )}
@@ -132,7 +132,7 @@ export default function DrawRandomiser({ state, dispatch }) {
                 key={team}
                 className={`draw-pot-team ${drawn ? 'draw-pot-team--drawn' : ''}`}
               >
-                {getFlag(team)} {team}
+                {team}
                 {owner && <span className="draw-pot-team__owner">→ {owner.name}</span>}
               </span>
             );
@@ -153,7 +153,7 @@ export default function DrawRandomiser({ state, dispatch }) {
                 {player.teams.length > 0 ? (
                   player.teams.map((team) => (
                     <li key={team}>
-                      {getFlag(team)} {team}
+                      {team}
                     </li>
                   ))
                 ) : (

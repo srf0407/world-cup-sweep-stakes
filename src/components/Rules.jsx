@@ -3,7 +3,7 @@ import { DEFAULT_PLAYER_NAMES, PRIZES, TIERS } from '../data/teams';
 const POINTS_RULES = [
   { event: 'Match win', points: '+4' },
   { event: 'Draw', points: '+2' },
-  { event: 'Draw decided on penalties', points: '+2 each, +1 bonus for penalty winner' },
+  { event: 'Draw decided on penalties', points: '+2 each at full time, +1 bonus for shootout winner (shootout goals not counted)' },
   { event: 'Goal scored', points: '+0.5 per goal' },
   { event: 'Goal conceded', points: '−0.5 per goal' },
   { event: 'Advance to next round', points: '+1 (once per round per team)' },

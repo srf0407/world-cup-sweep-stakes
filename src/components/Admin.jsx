@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { GROUP_FIXTURES } from '../data/fixtures';
 import { GROUPS } from '../data/groups';
-import { ADMIN_PIN, ALL_TEAMS, ROUNDS, fromFixtureName, getFlag } from '../data/teams';
+import { ADMIN_PIN, ALL_TEAMS, ROUNDS, fromFixtureName } from '../data/teams';
 import { findMatchResult, fixtureId } from '../utils/matches';
 
 const EMPTY_KNOCKOUT = {
@@ -12,17 +12,108 @@ const EMPTY_KNOCKOUT = {
   penalties: false,
   penaltyWinner: '',
   round: 'Round of 16',
-  isFirstInRound: true,
+  advanceBonusA: true,
+  advanceBonusB: true,
 };
 
-function TeamLine({ name }) {
-  const sweepName = fromFixtureName(name);
+function MatchScoringOptions({
+  teamA,
+  teamB,
+  teamALabel,
+  teamBLabel,
+  scoreA,
+  scoreB,
+  round,
+  penalties,
+  penaltyWinner,
+  advanceBonusA,
+  advanceBonusB,
+  onPenaltiesChange,
+  onPenaltyWinnerChange,
+  onAdvanceBonusAChange,
+  onAdvanceBonusBChange,
+  penaltyWinnerName = 'penaltyWinner',
+}) {
+  const isDraw =
+    scoreA !== '' && scoreB !== '' && Number(scoreA) === Number(scoreB);
+  const isKnockout = round && round !== 'Group Stage';
+
   return (
-    <span className="fixture-team">
-      <span className="fixture-team__flag">{getFlag(sweepName)}</span>
-      <span>{name}</span>
-    </span>
+    <div className="match-scoring-options">
+      <p className="admin-match-hint">
+        Enter full-time score only (after extra time). Penalty shootout goals are not entered and do not count.
+      </p>
+
+      {isDraw && (
+        <>
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={penalties}
+              onChange={(e) => onPenaltiesChange(e.target.checked)}
+            />
+            Decided on penalties (+2 draw pts each, +1 bonus for shootout winner)
+          </label>
+
+          {penalties && (
+            <fieldset className="penalty-fieldset">
+              <legend>Penalty shootout winner (+1 bonus)</legend>
+              <label className="radio-label">
+                <input
+                  type="radio"
+                  name={penaltyWinnerName}
+                  value={teamA}
+                  checked={penaltyWinner === teamA}
+                  onChange={() => onPenaltyWinnerChange(teamA)}
+                  disabled={!teamA}
+                />
+                {teamALabel || teamA || 'Team A'}
+              </label>
+              <label className="radio-label">
+                <input
+                  type="radio"
+                  name={penaltyWinnerName}
+                  value={teamB}
+                  checked={penaltyWinner === teamB}
+                  onChange={() => onPenaltyWinnerChange(teamB)}
+                  disabled={!teamB}
+                />
+                {teamBLabel || teamB || 'Team B'}
+              </label>
+            </fieldset>
+          )}
+        </>
+      )}
+
+      {isKnockout && (
+        <fieldset className="advance-fieldset">
+          <legend>Advance bonus (+1 for reaching this round, once per team per round)</legend>
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={advanceBonusA}
+              onChange={(e) => onAdvanceBonusAChange(e.target.checked)}
+              disabled={!teamA}
+            />
+            {teamALabel || teamA || 'Team A'} reached {round}
+          </label>
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={advanceBonusB}
+              onChange={(e) => onAdvanceBonusBChange(e.target.checked)}
+              disabled={!teamB}
+            />
+            {teamBLabel || teamB || 'Team B'} reached {round}
+          </label>
+        </fieldset>
+      )}
+    </div>
   );
+}
+
+function TeamLine({ name }) {
+  return <span className="fixture-team">{name}</span>;
 }
 
 function FixtureResultRow({ fixture, existing, dispatch }) {
@@ -30,13 +121,17 @@ function FixtureResultRow({ fixture, existing, dispatch }) {
   const teamB = fromFixtureName(fixture.team2);
   const [scoreA, setScoreA] = useState(existing?.scoreA ?? '');
   const [scoreB, setScoreB] = useState(existing?.scoreB ?? '');
+  const [penalties, setPenalties] = useState(Boolean(existing?.penalties));
+  const [penaltyWinner, setPenaltyWinner] = useState(existing?.penaltyWinner ?? '');
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     setScoreA(existing?.scoreA ?? '');
     setScoreB(existing?.scoreB ?? '');
-  }, [existing?.id, existing?.scoreA, existing?.scoreB]);
+    setPenalties(Boolean(existing?.penalties));
+    setPenaltyWinner(existing?.penaltyWinner ?? '');
+  }, [existing?.id, existing?.scoreA, existing?.scoreB, existing?.penalties, existing?.penaltyWinner]);
 
   const handleSave = (e) => {
     e.preventDefault();
@@ -47,13 +142,23 @@ function FixtureResultRow({ fixture, existing, dispatch }) {
       return;
     }
 
+    const isDraw = Number(scoreA) === Number(scoreB);
+    if (penalties && !isDraw) {
+      setError('Penalties only apply when the full-time score is a draw');
+      return;
+    }
+    if (penalties && !penaltyWinner) {
+      setError('Select penalty shootout winner');
+      return;
+    }
+
     const payload = {
       teamA,
       teamB,
       scoreA,
       scoreB,
-      penalties: false,
-      penaltyWinner: null,
+      penalties: isDraw && penalties,
+      penaltyWinner: isDraw && penalties ? penaltyWinner : null,
       round: 'Group Stage',
       fixtureId: fixtureId(fixture),
     };
@@ -69,6 +174,7 @@ function FixtureResultRow({ fixture, existing, dispatch }) {
   };
 
   const played = Boolean(existing);
+  const isDraw = scoreA !== '' && scoreB !== '' && Number(scoreA) === Number(scoreB);
 
   return (
     <form
@@ -106,6 +212,28 @@ function FixtureResultRow({ fixture, existing, dispatch }) {
           {saved ? 'Saved' : played ? 'Update' : 'Save'}
         </button>
       </div>
+      {isDraw && (
+        <div className="admin-fixture-row__extras">
+          <MatchScoringOptions
+            teamA={teamA}
+            teamB={teamB}
+            teamALabel={fixture.team1}
+            teamBLabel={fixture.team2}
+            scoreA={scoreA}
+            scoreB={scoreB}
+            round="Group Stage"
+            penalties={penalties}
+            penaltyWinner={penaltyWinner}
+            advanceBonusA={false}
+            advanceBonusB={false}
+            onPenaltiesChange={setPenalties}
+            onPenaltyWinnerChange={setPenaltyWinner}
+            onAdvanceBonusAChange={() => {}}
+            onAdvanceBonusBChange={() => {}}
+            penaltyWinnerName={`penalty-${fixtureId(fixture)}`}
+          />
+        </div>
+      )}
       <div className="fixture-row__venue">{fixture.ground}</div>
       {error && <p className="error-msg admin-fixture-row__error">{error}</p>}
     </form>
@@ -183,8 +311,13 @@ export default function Admin({ state, dispatch }) {
       setError('Enter both scores');
       return;
     }
+    const isKnockoutDraw = Number(knockout.scoreA) === Number(knockout.scoreB);
+    if (knockout.penalties && !isKnockoutDraw) {
+      setError('Penalties only apply when the full-time score is a draw');
+      return;
+    }
     if (knockout.penalties && !knockout.penaltyWinner) {
-      setError('Select penalty winner');
+      setError('Select penalty shootout winner');
       return;
     }
 
@@ -197,7 +330,8 @@ export default function Admin({ state, dispatch }) {
       penalties: knockout.penalties,
       penaltyWinner: knockout.penaltyWinner,
       round: knockout.round,
-      isFirstInRound: knockout.isFirstInRound,
+      advanceBonusA: knockout.advanceBonusA,
+      advanceBonusB: knockout.advanceBonusB,
     });
 
     setKnockout(EMPTY_KNOCKOUT);
@@ -240,7 +374,17 @@ export default function Admin({ state, dispatch }) {
     return a.time.localeCompare(b.time);
   });
 
-  const isDraw = Number(knockout.scoreA) === Number(knockout.scoreB);
+  const formatAdvanceNote = (match) => {
+    if (match.round === 'Group Stage') return '';
+    const notes = [];
+    if (match.advanceBonusA !== false || (match.advanceBonusA === undefined && match.isFirstInRound !== false)) {
+      notes.push(`${match.teamA} +1 adv`);
+    }
+    if (match.advanceBonusB !== false || (match.advanceBonusB === undefined && match.isFirstInRound !== false)) {
+      notes.push(`${match.teamB} +1 adv`);
+    }
+    return notes.length ? ` · ${notes.join(', ')}` : '';
+  };
 
   return (
     <section className="section">
@@ -301,7 +445,7 @@ export default function Admin({ state, dispatch }) {
                 <option value="">Select team…</option>
                 {ALL_TEAMS.map((t) => (
                   <option key={t} value={t}>
-                    {getFlag(t)} {t}
+                    {t}
                   </option>
                 ))}
               </select>
@@ -316,7 +460,7 @@ export default function Admin({ state, dispatch }) {
                 <option value="">Select team…</option>
                 {ALL_TEAMS.map((t) => (
                   <option key={t} value={t}>
-                    {getFlag(t)} {t}
+                    {t}
                   </option>
                 ))}
               </select>
@@ -363,51 +507,21 @@ export default function Admin({ state, dispatch }) {
             </label>
           </div>
 
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={knockout.penalties}
-              onChange={(e) => handleKnockoutChange('penalties', e.target.checked)}
-            />
-            Match decided on penalties (after a draw)
-          </label>
-
-          {knockout.penalties && isDraw && (
-            <fieldset className="penalty-fieldset">
-              <legend>Penalty winner (+1 bonus)</legend>
-              <label className="radio-label">
-                <input
-                  type="radio"
-                  name="penaltyWinner"
-                  value={knockout.teamA}
-                  checked={knockout.penaltyWinner === knockout.teamA}
-                  onChange={() => handleKnockoutChange('penaltyWinner', knockout.teamA)}
-                  disabled={!knockout.teamA}
-                />
-                {knockout.teamA ? `${getFlag(knockout.teamA)} ${knockout.teamA}` : 'Team A'}
-              </label>
-              <label className="radio-label">
-                <input
-                  type="radio"
-                  name="penaltyWinner"
-                  value={knockout.teamB}
-                  checked={knockout.penaltyWinner === knockout.teamB}
-                  onChange={() => handleKnockoutChange('penaltyWinner', knockout.teamB)}
-                  disabled={!knockout.teamB}
-                />
-                {knockout.teamB ? `${getFlag(knockout.teamB)} ${knockout.teamB}` : 'Team B'}
-              </label>
-            </fieldset>
-          )}
-
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={knockout.isFirstInRound}
-              onChange={(e) => handleKnockoutChange('isFirstInRound', e.target.checked)}
-            />
-            First match in this round for teams (+1 advance point each, once per round)
-          </label>
+          <MatchScoringOptions
+            teamA={knockout.teamA}
+            teamB={knockout.teamB}
+            scoreA={knockout.scoreA}
+            scoreB={knockout.scoreB}
+            round={knockout.round}
+            penalties={knockout.penalties}
+            penaltyWinner={knockout.penaltyWinner}
+            advanceBonusA={knockout.advanceBonusA}
+            advanceBonusB={knockout.advanceBonusB}
+            onPenaltiesChange={(value) => handleKnockoutChange('penalties', value)}
+            onPenaltyWinnerChange={(value) => handleKnockoutChange('penaltyWinner', value)}
+            onAdvanceBonusAChange={(value) => handleKnockoutChange('advanceBonusA', value)}
+            onAdvanceBonusBChange={(value) => handleKnockoutChange('advanceBonusB', value)}
+          />
 
           {error && <p className="error-msg">{error}</p>}
 
@@ -424,8 +538,9 @@ export default function Admin({ state, dispatch }) {
             {[...state.matches].reverse().map((m) => (
               <li key={m.id} className="match-log__item">
                 <span>
-                  {getFlag(m.teamA)} {m.teamA} {m.scoreA}–{m.scoreB} {m.teamB} {getFlag(m.teamB)}
-                  {m.penalties && ' (p)'} · {m.round}
+                  {m.teamA} {m.scoreA}–{m.scoreB} {m.teamB}
+                  {m.penalties && ` (p: ${m.penaltyWinner})`} · {m.round}
+                  {formatAdvanceNote(m)}
                 </span>
                 <button
                   type="button"

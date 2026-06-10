@@ -1,4 +1,4 @@
-import { ALL_TEAMS, getFlag } from '../data/teams';
+import { ALL_TEAMS } from '../data/teams';
 import { formatPoints } from '../utils/points';
 
 export default function TeamStats({ state }) {
@@ -34,10 +34,7 @@ export default function TeamStats({ state }) {
             {rows.map((row, i) => (
               <tr key={row.team} className={i % 2 === 0 ? 'row-alt' : ''}>
                 <td>
-                  <span className="fixture-team">
-                    <span className="fixture-team__flag">{getFlag(row.team)}</span>
-                    {row.team}
-                  </span>
+                  <span className="fixture-team">{row.team}</span>
                 </td>
                 <td>{row.ownerName}</td>
                 <td>{row.matchesPlayed}</td>

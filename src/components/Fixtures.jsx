@@ -1,17 +1,11 @@
 import { useState } from 'react';
 import { GROUP_FIXTURES } from '../data/fixtures';
 import { GROUPS } from '../data/groups';
-import { fromFixtureName, getFlag, toFixtureName } from '../data/teams';
+import { toFixtureName } from '../data/teams';
 import { findMatchResult } from '../utils/matches';
 
 function TeamLine({ name }) {
-  const sweepName = fromFixtureName(name);
-  return (
-    <span className="fixture-team">
-      <span className="fixture-team__flag">{getFlag(sweepName)}</span>
-      <span>{name}</span>
-    </span>
-  );
+  return <span className="fixture-team">{name}</span>;
 }
 
 export default function Fixtures({ state }) {
