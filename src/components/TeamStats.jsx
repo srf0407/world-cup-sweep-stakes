@@ -2,6 +2,7 @@ import { ALL_TEAMS, getFlag } from '../data/teams';
 import { formatPoints } from '../utils/points';
 
 export default function TeamStats({ state }) {
+  if (!state || !state.players || !state.teams) return null;
   const playerMap = Object.fromEntries(state.players.map((p) => [p.id, p.name]));
 
   const rows = ALL_TEAMS.map((team) => ({

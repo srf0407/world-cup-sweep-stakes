@@ -11,6 +11,7 @@ const POT_LABELS = {
 };
 
 export default function DrawRandomiser({ state, dispatch }) {
+  if (!state || !state.players) return null;
   const [showReveal, setShowReveal] = useState(false);
   const progress = state.drawProgress;
   const hasDraw = state.players[0]?.teams.length > 0;

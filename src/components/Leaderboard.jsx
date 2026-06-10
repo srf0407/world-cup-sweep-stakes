@@ -4,6 +4,7 @@ import { getPlayerTotal, formatPoints } from '../utils/points';
 import TeamBadge from './TeamBadge';
 
 export default function Leaderboard({ state, dispatch }) {
+  if (!state || !state.players || !state.teams) return null;
   const prevRanks = useRef({});
 
   const ranked = [...state.players]

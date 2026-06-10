@@ -2,6 +2,7 @@ import { getPlayerTotal } from '../utils/points';
 import TeamBadge from './TeamBadge';
 
 export default function PlayerCards({ state }) {
+  if (!state || !state.players || !state.teams) return null;
   const sorted = [...state.players].sort(
     (a, b) => getPlayerTotal(state.teams, b.teams) - getPlayerTotal(state.teams, a.teams)
   );

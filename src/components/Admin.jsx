@@ -113,6 +113,7 @@ function FixtureResultRow({ fixture, existing, dispatch }) {
 }
 
 export default function Admin({ state, dispatch }) {
+  if (!state || !state.matches) return null;
   const [pin, setPin] = useState('');
   const [authenticated, setAuthenticated] = useState(false);
   const [activeGroup, setActiveGroup] = useState('All');
