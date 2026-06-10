@@ -11,7 +11,7 @@ Build and deploy a **free-hosted React app** for an 8-person World Cup sweepstak
 ### Stack
 - **React** (Create React App)
 - **GitHub Pages** via the `gh-pages` npm package
-- No backend — all state in `localStorage`
+
 
 ### Setup Steps
 ```bash

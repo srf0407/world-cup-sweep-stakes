@@ -109,6 +109,6 @@ export const ROUNDS = [
   'Final',
 ];
 
-export const ADMIN_PIN = '1234';
+export const ADMIN_PIN = '2001';
 
 export const PRIZES = { first: 2700, second: 1300 };

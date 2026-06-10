@@ -2,15 +2,7 @@ import { useState } from 'react';
 import { GROUP_FIXTURES } from '../data/fixtures';
 import { GROUPS } from '../data/groups';
 import { fromFixtureName, getFlag, toFixtureName } from '../data/teams';
-
-function matchKey(team1, team2) {
-  return [team1, team2].sort().join('|');
-}
-
-function findMatchResult(matches, team1, team2) {
-  const canonical = matchKey(fromFixtureName(team1), fromFixtureName(team2));
-  return matches.find((m) => matchKey(m.teamA, m.teamB) === canonical);
-}
+import { findMatchResult } from '../utils/matches';
 
 function TeamLine({ name }) {
   const sweepName = fromFixtureName(name);

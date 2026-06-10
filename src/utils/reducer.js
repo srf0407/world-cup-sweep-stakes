@@ -280,6 +280,49 @@ export function reducer(state, action) {
       };
     }
 
+    case 'UPDATE_MATCH': {
+      const {
+        matchId,
+        teamA,
+        teamB,
+        scoreA,
+        scoreB,
+        penalties,
+        penaltyWinner,
+        round,
+        isFirstInRound,
+      } = action;
+
+      const matches = state.matches.map((m) =>
+        m.id === matchId
+          ? {
+              ...m,
+              teamA,
+              teamB,
+              scoreA: Number(scoreA),
+              scoreB: Number(scoreB),
+              penalties: Boolean(penalties),
+              penaltyWinner: penalties ? penaltyWinner : null,
+              round,
+              isFirstInRound: round !== 'Group Stage' ? isFirstInRound !== false : false,
+              timestamp: new Date().toISOString(),
+            }
+          : m
+      );
+
+      const { teams, roundsPlayed } = recalcAllTeams({ ...state, matches });
+      const teamsWithOwners = assignOwners(state.players, teams);
+      const lastUpdatedPlayerIds = getAffectedPlayerIds(state, teamA, teamB);
+
+      return {
+        ...state,
+        matches,
+        teams: teamsWithOwners,
+        roundsPlayed,
+        lastUpdatedPlayerIds,
+      };
+    }
+
     case 'DELETE_MATCH': {
       const matches = state.matches.filter((m) => m.id !== action.matchId);
       const { teams, roundsPlayed } = recalcAllTeams({ ...state, matches });

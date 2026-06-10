@@ -367,6 +367,55 @@
   color: var(--gold);
 }
 
+.admin-fixtures-list {
+  margin-top: 1rem;
+}
+
+.admin-fixture-row {
+  display: block;
+}
+
+.admin-fixture-row__entry {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.admin-fixture-row__scores {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.admin-fixture-row__dash {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.input--score {
+  width: 3.25rem;
+  text-align: center;
+  padding: 0.4rem 0.25rem;
+}
+
+.admin-fixture-row__error {
+  text-align: center;
+  margin-top: 0.35rem;
+}
+
+.admin-knockout-section {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.admin-knockout-section .section__subtitle {
+  margin-bottom: 1rem;
+}
+
 /* Forms */
 .pin-form {
   display: flex;

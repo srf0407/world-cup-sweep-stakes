@@ -1,21 +1,122 @@
-import { useState } from 'react';
-import { ADMIN_PIN, ALL_TEAMS, ROUNDS, getFlag } from '../data/teams';
+import { useEffect, useState } from 'react';
+import { GROUP_FIXTURES } from '../data/fixtures';
+import { GROUPS } from '../data/groups';
+import { ADMIN_PIN, ALL_TEAMS, ROUNDS, fromFixtureName, getFlag } from '../data/teams';
+import { findMatchResult, fixtureId } from '../utils/matches';
 
-const EMPTY_FORM = {
+const EMPTY_KNOCKOUT = {
   teamA: '',
   teamB: '',
   scoreA: '',
   scoreB: '',
   penalties: false,
   penaltyWinner: '',
-  round: 'Group Stage',
+  round: 'Round of 16',
   isFirstInRound: true,
 };
+
+function TeamLine({ name }) {
+  const sweepName = fromFixtureName(name);
+  return (
+    <span className="fixture-team">
+      <span className="fixture-team__flag">{getFlag(sweepName)}</span>
+      <span>{name}</span>
+    </span>
+  );
+}
+
+function FixtureResultRow({ fixture, existing, dispatch }) {
+  const teamA = fromFixtureName(fixture.team1);
+  const teamB = fromFixtureName(fixture.team2);
+  const [scoreA, setScoreA] = useState(existing?.scoreA ?? '');
+  const [scoreB, setScoreB] = useState(existing?.scoreB ?? '');
+  const [error, setError] = useState('');
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    setScoreA(existing?.scoreA ?? '');
+    setScoreB(existing?.scoreB ?? '');
+  }, [existing?.id, existing?.scoreA, existing?.scoreB]);
+
+  const handleSave = (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (scoreA === '' || scoreB === '') {
+      setError('Enter both scores');
+      return;
+    }
+
+    const payload = {
+      teamA,
+      teamB,
+      scoreA,
+      scoreB,
+      penalties: false,
+      penaltyWinner: null,
+      round: 'Group Stage',
+      fixtureId: fixtureId(fixture),
+    };
+
+    if (existing) {
+      dispatch({ type: 'UPDATE_MATCH', matchId: existing.id, ...payload });
+    } else {
+      dispatch({ type: 'ADD_MATCH', ...payload });
+    }
+
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  const played = Boolean(existing);
+
+  return (
+    <form
+      className={`fixture-row admin-fixture-row ${played ? 'fixture-row--played' : ''}`}
+      onSubmit={handleSave}
+    >
+      <div className="fixture-row__meta">
+        <span className="fixture-row__date">{fixture.date}</span>
+        <span className="fixture-row__time">{fixture.time}</span>
+        <span className="fixture-row__group">{fixture.group}</span>
+      </div>
+      <div className="admin-fixture-row__entry">
+        <TeamLine name={fixture.team1} />
+        <div className="admin-fixture-row__scores">
+          <input
+            type="number"
+            min="0"
+            value={scoreA}
+            onChange={(e) => setScoreA(e.target.value)}
+            className="input input--score"
+            aria-label={`${fixture.team1} score`}
+          />
+          <span className="admin-fixture-row__dash">–</span>
+          <input
+            type="number"
+            min="0"
+            value={scoreB}
+            onChange={(e) => setScoreB(e.target.value)}
+            className="input input--score"
+            aria-label={`${fixture.team2} score`}
+          />
+        </div>
+        <TeamLine name={fixture.team2} />
+        <button type="submit" className="btn btn--primary btn--small">
+          {saved ? 'Saved' : played ? 'Update' : 'Save'}
+        </button>
+      </div>
+      <div className="fixture-row__venue">{fixture.ground}</div>
+      {error && <p className="error-msg admin-fixture-row__error">{error}</p>}
+    </form>
+  );
+}
 
 export default function Admin({ state, dispatch }) {
   const [pin, setPin] = useState('');
   const [authenticated, setAuthenticated] = useState(false);
-  const [form, setForm] = useState(EMPTY_FORM);
+  const [activeGroup, setActiveGroup] = useState('All');
+  const [knockout, setKnockout] = useState(EMPTY_KNOCKOUT);
   const [error, setError] = useState('');
 
   const handlePinSubmit = (e) => {
@@ -28,44 +129,44 @@ export default function Admin({ state, dispatch }) {
     }
   };
 
-  const handleChange = (field, value) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+  const handleKnockoutChange = (field, value) => {
+    setKnockout((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleKnockoutSubmit = (e) => {
     e.preventDefault();
     setError('');
 
-    if (!form.teamA || !form.teamB) {
+    if (!knockout.teamA || !knockout.teamB) {
       setError('Select both teams');
       return;
     }
-    if (form.teamA === form.teamB) {
+    if (knockout.teamA === knockout.teamB) {
       setError('Teams must be different');
       return;
     }
-    if (form.scoreA === '' || form.scoreB === '') {
+    if (knockout.scoreA === '' || knockout.scoreB === '') {
       setError('Enter both scores');
       return;
     }
-    if (form.penalties && !form.penaltyWinner) {
+    if (knockout.penalties && !knockout.penaltyWinner) {
       setError('Select penalty winner');
       return;
     }
 
     dispatch({
       type: 'ADD_MATCH',
-      teamA: form.teamA,
-      teamB: form.teamB,
-      scoreA: form.scoreA,
-      scoreB: form.scoreB,
-      penalties: form.penalties,
-      penaltyWinner: form.penaltyWinner,
-      round: form.round,
-      isFirstInRound: form.isFirstInRound,
+      teamA: knockout.teamA,
+      teamB: knockout.teamB,
+      scoreA: knockout.scoreA,
+      scoreB: knockout.scoreB,
+      penalties: knockout.penalties,
+      penaltyWinner: knockout.penaltyWinner,
+      round: knockout.round,
+      isFirstInRound: knockout.isFirstInRound,
     });
 
-    setForm(EMPTY_FORM);
+    setKnockout(EMPTY_KNOCKOUT);
   };
 
   if (!authenticated) {
@@ -88,150 +189,199 @@ export default function Admin({ state, dispatch }) {
           <button type="submit" className="btn btn--primary">
             Unlock
           </button>
-          <p className="pin-hint">Default PIN: <strong>1234</strong></p>
           {error && <p className="error-msg">{error}</p>}
         </form>
       </section>
     );
   }
 
-  const isDraw = Number(form.scoreA) === Number(form.scoreB);
+  const filtered =
+    activeGroup === 'All'
+      ? GROUP_FIXTURES
+      : GROUP_FIXTURES.filter((f) => f.group === activeGroup);
+
+  const sorted = [...filtered].sort((a, b) => {
+    const dateCompare = a.date.localeCompare(b.date);
+    if (dateCompare !== 0) return dateCompare;
+    return a.time.localeCompare(b.time);
+  });
+
+  const isDraw = Number(knockout.scoreA) === Number(knockout.scoreB);
 
   return (
     <section className="section">
       <header className="section__header">
-        <h2>Match Entry</h2>
-        <p className="section__subtitle">Results auto-calculate sweepstake points</p>
+        <h2>Enter Results</h2>
+        <p className="section__subtitle">
+          Save fixture scores to update points and the leaderboard
+        </p>
       </header>
 
-      <form className="match-form" onSubmit={handleSubmit}>
-        <div className="form-row">
-          <label>
-            Team A
-            <select
-              value={form.teamA}
-              onChange={(e) => handleChange('teamA', e.target.value)}
-              className="input"
-            >
-              <option value="">Select team…</option>
-              {ALL_TEAMS.map((t) => (
-                <option key={t} value={t}>
-                  {getFlag(t)} {t}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Team B
-            <select
-              value={form.teamB}
-              onChange={(e) => handleChange('teamB', e.target.value)}
-              className="input"
-            >
-              <option value="">Select team…</option>
-              {ALL_TEAMS.map((t) => (
-                <option key={t} value={t}>
-                  {getFlag(t)} {t}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
+      <div className="group-filter">
+        <button
+          type="button"
+          className={`group-filter__btn ${activeGroup === 'All' ? 'group-filter__btn--active' : ''}`}
+          onClick={() => setActiveGroup('All')}
+        >
+          All
+        </button>
+        {GROUPS.map((g) => (
+          <button
+            key={g.name}
+            type="button"
+            className={`group-filter__btn ${activeGroup === g.name ? 'group-filter__btn--active' : ''}`}
+            onClick={() => setActiveGroup(g.name)}
+          >
+            {g.name.replace('Group ', '')}
+          </button>
+        ))}
+      </div>
 
-        <div className="form-row">
-          <label>
-            Score A
-            <input
-              type="number"
-              min="0"
-              value={form.scoreA}
-              onChange={(e) => handleChange('scoreA', e.target.value)}
-              className="input"
+      <div className="fixtures-list admin-fixtures-list">
+        {sorted.map((fixture) => {
+          const existing = findMatchResult(state.matches, fixture.team1, fixture.team2);
+          return (
+            <FixtureResultRow
+              key={fixtureId(fixture)}
+              fixture={fixture}
+              existing={existing}
+              dispatch={dispatch}
             />
-          </label>
-          <label>
-            Score B
-            <input
-              type="number"
-              min="0"
-              value={form.scoreB}
-              onChange={(e) => handleChange('scoreB', e.target.value)}
-              className="input"
-            />
-          </label>
-        </div>
+          );
+        })}
+      </div>
 
-        <div className="form-row">
-          <label>
-            Round
-            <select
-              value={form.round}
-              onChange={(e) => handleChange('round', e.target.value)}
-              className="input"
-            >
-              {ROUNDS.map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
+      <div className="knockout-section admin-knockout-section">
+        <h3>Knockout Match</h3>
+        <p className="section__subtitle">Add knockout results not listed in group fixtures</p>
 
-        <label className="checkbox-label">
-          <input
-            type="checkbox"
-            checked={form.penalties}
-            onChange={(e) => handleChange('penalties', e.target.checked)}
-          />
-          Match decided on penalties (after a draw)
-        </label>
-
-        {form.penalties && isDraw && (
-          <fieldset className="penalty-fieldset">
-            <legend>Penalty winner (+1 bonus)</legend>
-            <label className="radio-label">
-              <input
-                type="radio"
-                name="penaltyWinner"
-                value={form.teamA}
-                checked={form.penaltyWinner === form.teamA}
-                onChange={() => handleChange('penaltyWinner', form.teamA)}
-                disabled={!form.teamA}
-              />
-              {form.teamA ? `${getFlag(form.teamA)} ${form.teamA}` : 'Team A'}
+        <form className="match-form" onSubmit={handleKnockoutSubmit}>
+          <div className="form-row">
+            <label>
+              Team A
+              <select
+                value={knockout.teamA}
+                onChange={(e) => handleKnockoutChange('teamA', e.target.value)}
+                className="input"
+              >
+                <option value="">Select team…</option>
+                {ALL_TEAMS.map((t) => (
+                  <option key={t} value={t}>
+                    {getFlag(t)} {t}
+                  </option>
+                ))}
+              </select>
             </label>
-            <label className="radio-label">
-              <input
-                type="radio"
-                name="penaltyWinner"
-                value={form.teamB}
-                checked={form.penaltyWinner === form.teamB}
-                onChange={() => handleChange('penaltyWinner', form.teamB)}
-                disabled={!form.teamB}
-              />
-              {form.teamB ? `${getFlag(form.teamB)} ${form.teamB}` : 'Team B'}
+            <label>
+              Team B
+              <select
+                value={knockout.teamB}
+                onChange={(e) => handleKnockoutChange('teamB', e.target.value)}
+                className="input"
+              >
+                <option value="">Select team…</option>
+                {ALL_TEAMS.map((t) => (
+                  <option key={t} value={t}>
+                    {getFlag(t)} {t}
+                  </option>
+                ))}
+              </select>
             </label>
-          </fieldset>
-        )}
+          </div>
 
-        {form.round !== 'Group Stage' && (
+          <div className="form-row">
+            <label>
+              Score A
+              <input
+                type="number"
+                min="0"
+                value={knockout.scoreA}
+                onChange={(e) => handleKnockoutChange('scoreA', e.target.value)}
+                className="input"
+              />
+            </label>
+            <label>
+              Score B
+              <input
+                type="number"
+                min="0"
+                value={knockout.scoreB}
+                onChange={(e) => handleKnockoutChange('scoreB', e.target.value)}
+                className="input"
+              />
+            </label>
+          </div>
+
+          <div className="form-row">
+            <label>
+              Round
+              <select
+                value={knockout.round}
+                onChange={(e) => handleKnockoutChange('round', e.target.value)}
+                className="input"
+              >
+                {ROUNDS.filter((r) => r !== 'Group Stage').map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
           <label className="checkbox-label">
             <input
               type="checkbox"
-              checked={form.isFirstInRound}
-              onChange={(e) => handleChange('isFirstInRound', e.target.checked)}
+              checked={knockout.penalties}
+              onChange={(e) => handleKnockoutChange('penalties', e.target.checked)}
+            />
+            Match decided on penalties (after a draw)
+          </label>
+
+          {knockout.penalties && isDraw && (
+            <fieldset className="penalty-fieldset">
+              <legend>Penalty winner (+1 bonus)</legend>
+              <label className="radio-label">
+                <input
+                  type="radio"
+                  name="penaltyWinner"
+                  value={knockout.teamA}
+                  checked={knockout.penaltyWinner === knockout.teamA}
+                  onChange={() => handleKnockoutChange('penaltyWinner', knockout.teamA)}
+                  disabled={!knockout.teamA}
+                />
+                {knockout.teamA ? `${getFlag(knockout.teamA)} ${knockout.teamA}` : 'Team A'}
+              </label>
+              <label className="radio-label">
+                <input
+                  type="radio"
+                  name="penaltyWinner"
+                  value={knockout.teamB}
+                  checked={knockout.penaltyWinner === knockout.teamB}
+                  onChange={() => handleKnockoutChange('penaltyWinner', knockout.teamB)}
+                  disabled={!knockout.teamB}
+                />
+                {knockout.teamB ? `${getFlag(knockout.teamB)} ${knockout.teamB}` : 'Team B'}
+              </label>
+            </fieldset>
+          )}
+
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={knockout.isFirstInRound}
+              onChange={(e) => handleKnockoutChange('isFirstInRound', e.target.checked)}
             />
             First match in this round for teams (+1 advance point each, once per round)
           </label>
-        )}
 
-        {error && <p className="error-msg">{error}</p>}
+          {error && <p className="error-msg">{error}</p>}
 
-        <button type="submit" className="btn btn--primary btn--full">
-          Submit Result
-        </button>
-      </form>
+          <button type="submit" className="btn btn--primary btn--full">
+            Submit Knockout Result
+          </button>
+        </form>
+      </div>
 
       {state.matches.length > 0 && (
         <div className="match-log">

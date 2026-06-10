@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "homepage": "https://sam.github.io/world-cup-sweep-stakes",
+  "homepage": "https://srf0407.github.io/world-cup-sweep-stakes",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
