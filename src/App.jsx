@@ -1,5 +1,5 @@
 import { useReducer, useEffect, useState } from 'react';
-import { reducer, getInitialState } from './utils/reducer';
+import { reducer, getInitialState, normalizeState } from './utils/reducer';
 import { saveState, loadState, onStateChange } from './utils/storage';
 import TabBar from './components/TabBar';
 import Leaderboard from './components/Leaderboard';
@@ -21,8 +21,9 @@ export default function App() {
     const initializeState = async () => {
       const savedState = await loadState();
       if (savedState) {
-        // Dispatch an action to set the entire state
-        dispatch({ type: 'SET_STATE', payload: savedState });
+        // Normalize and dispatch the Firebase state
+        const normalized = normalizeState(savedState);
+        dispatch({ type: 'SET_STATE', payload: normalized });
       }
       setInitialized(true);
     };
@@ -34,7 +35,9 @@ export default function App() {
     if (!initialized) return;
     
     const unsubscribe = onStateChange((updatedState) => {
-      dispatch({ type: 'SET_STATE', payload: updatedState });
+      // Normalize incoming Firebase data
+      const normalized = normalizeState(updatedState);
+      dispatch({ type: 'SET_STATE', payload: normalized });
     });
 
     return () => unsubscribe();

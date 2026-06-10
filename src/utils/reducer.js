@@ -41,6 +41,21 @@ export function createInitialState() {
   };
 }
 
+export function normalizeState(state) {
+  if (!state) return createInitialState();
+  
+  // Ensure all required properties exist with defaults
+  return {
+    players: state.players || [],
+    teams: state.teams || createInitialTeams(),
+    matches: Array.isArray(state.matches) ? state.matches : [],
+    drawLocked: Boolean(state.drawLocked),
+    roundsPlayed: state.roundsPlayed || {},
+    lastUpdatedPlayerIds: state.lastUpdatedPlayerIds || [],
+    drawProgress: state.drawProgress || undefined,
+  };
+}
+
 export function getInitialState() {
   // Initial state is now loaded asynchronously in App.jsx
   // Return default state which will be replaced once Firebase data loads
