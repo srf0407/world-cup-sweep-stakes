@@ -81,7 +81,7 @@ export default function Rules() {
           <li>As World Cup matches are played, results are entered via the <strong>Admin</strong> tab.</li>
           <li>Points are calculated automatically and the <strong>Leaderboard</strong> updates in real time.</li>
           <li>Check <strong>Fixtures</strong> for the full group stage schedule.</li>
-          <li>Knockout matches (Round of 16 onward) are added manually as teams progress.</li>
+          <li>Knockout matches (Round of 32 onward) are added via the <strong>Admin</strong> tab as teams progress.</li>
         </ol>
       </article>
     </section>

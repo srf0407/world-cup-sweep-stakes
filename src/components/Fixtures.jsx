@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { GROUP_FIXTURES } from '../data/fixtures';
+import { GROUP_FIXTURES, ROUND_OF_32_FIXTURES } from '../data/fixtures';
 import { GROUPS } from '../data/groups';
 import { toFixtureName } from '../data/teams';
 import { findMatchResult } from '../utils/matches';
@@ -29,7 +29,7 @@ export default function Fixtures({ state }) {
     <section className="section">
       <header className="section__header">
         <h2>Fixtures</h2>
-        <p className="section__subtitle">72 group stage matches · World Cup 2026</p>
+        <p className="section__subtitle">72 group stage matches · Round of 32 · World Cup 2026</p>
       </header>
 
       <div className="group-filter">
@@ -80,12 +80,47 @@ export default function Fixtures({ state }) {
         })}
       </div>
 
-      {matches.filter((m) => m.round !== 'Group Stage').length > 0 && (
+      <div className="knockout-section">
+        <h3>Round of 32</h3>
+        <div className="fixtures-list">
+          {ROUND_OF_32_FIXTURES.map((fixture) => {
+            const result = findMatchResult(matches, fixture.team1, fixture.team2);
+            const played = Boolean(result);
+
+            return (
+              <div
+                key={fixture.matchId}
+                className={`fixture-row ${played ? 'fixture-row--played' : ''}`}
+              >
+                <div className="fixture-row__meta">
+                  <span className="fixture-row__date">{fixture.date}</span>
+                  <span className="fixture-row__group">{fixture.round}</span>
+                </div>
+                <div className="fixture-row__match">
+                  <TeamLine name={fixture.team1} />
+                  {played ? (
+                    <span className="fixture-score">
+                      {result.scoreA} – {result.scoreB}
+                      {result.penalties && ' (p)'}
+                    </span>
+                  ) : (
+                    <span className="fixture-vs">vs</span>
+                  )}
+                  <TeamLine name={fixture.team2} />
+                </div>
+                <div className="fixture-row__venue">{fixture.ground}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {matches.filter((m) => m.round !== 'Group Stage' && m.round !== 'Round of 32').length > 0 && (
         <div className="knockout-section">
           <h3>Knockout Matches</h3>
           <div className="fixtures-list">
             {matches
-              .filter((m) => m.round !== 'Group Stage')
+              .filter((m) => m.round !== 'Group Stage' && m.round !== 'Round of 32')
               .map((match) => (
                 <div key={match.id} className="fixture-row fixture-row--played">
                   <div className="fixture-row__meta">

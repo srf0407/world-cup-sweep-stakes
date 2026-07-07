@@ -10,5 +10,6 @@ export function findMatchResult(matches, team1, team2) {
 }
 
 export function fixtureId(fixture) {
+  if (fixture.matchId) return fixture.matchId;
   return `${fixture.date}|${fixture.team1}|${fixture.team2}`;
 }

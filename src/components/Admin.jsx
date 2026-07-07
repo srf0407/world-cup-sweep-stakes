@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { GROUP_FIXTURES } from '../data/fixtures';
+import { GROUP_FIXTURES, ROUND_OF_32_FIXTURES } from '../data/fixtures';
 import { GROUPS } from '../data/groups';
 import { ADMIN_PIN, ALL_TEAMS, ROUNDS, fromFixtureName } from '../data/teams';
 import { findMatchResult, fixtureId } from '../utils/matches';
@@ -116,22 +116,52 @@ function TeamLine({ name }) {
   return <span className="fixture-team">{name}</span>;
 }
 
-function FixtureResultRow({ fixture, existing, dispatch }) {
+function getDefaultScores(fixture, teamA, teamB, existing) {
+  const defaults = fixture.defaultResult;
+  const penaltyWinner =
+    defaults?.penaltyWinner != null
+      ? fromFixtureName(defaults.penaltyWinner)
+      : '';
+
+  return {
+    scoreA: existing?.scoreA ?? defaults?.scoreA ?? '',
+    scoreB: existing?.scoreB ?? defaults?.scoreB ?? '',
+    penalties: existing ? Boolean(existing.penalties) : Boolean(defaults?.penalties),
+    penaltyWinner: existing?.penaltyWinner ?? penaltyWinner,
+  };
+}
+
+function FixtureResultRow({ fixture, existing, dispatch, round = 'Group Stage', enableAdvanceBonus = false }) {
   const teamA = fromFixtureName(fixture.team1);
   const teamB = fromFixtureName(fixture.team2);
-  const [scoreA, setScoreA] = useState(existing?.scoreA ?? '');
-  const [scoreB, setScoreB] = useState(existing?.scoreB ?? '');
-  const [penalties, setPenalties] = useState(Boolean(existing?.penalties));
-  const [penaltyWinner, setPenaltyWinner] = useState(existing?.penaltyWinner ?? '');
+  const initial = getDefaultScores(fixture, teamA, teamB, existing);
+  const [scoreA, setScoreA] = useState(initial.scoreA);
+  const [scoreB, setScoreB] = useState(initial.scoreB);
+  const [penalties, setPenalties] = useState(initial.penalties);
+  const [penaltyWinner, setPenaltyWinner] = useState(initial.penaltyWinner);
+  const [advanceBonusA, setAdvanceBonusA] = useState(existing?.advanceBonusA !== false);
+  const [advanceBonusB, setAdvanceBonusB] = useState(existing?.advanceBonusB !== false);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    setScoreA(existing?.scoreA ?? '');
-    setScoreB(existing?.scoreB ?? '');
-    setPenalties(Boolean(existing?.penalties));
-    setPenaltyWinner(existing?.penaltyWinner ?? '');
-  }, [existing?.id, existing?.scoreA, existing?.scoreB, existing?.penalties, existing?.penaltyWinner]);
+    const next = getDefaultScores(fixture, teamA, teamB, existing);
+    setScoreA(next.scoreA);
+    setScoreB(next.scoreB);
+    setPenalties(next.penalties);
+    setPenaltyWinner(next.penaltyWinner);
+    setAdvanceBonusA(existing?.advanceBonusA !== false);
+    setAdvanceBonusB(existing?.advanceBonusB !== false);
+  }, [
+    existing?.id,
+    existing?.scoreA,
+    existing?.scoreB,
+    existing?.penalties,
+    existing?.penaltyWinner,
+    existing?.advanceBonusA,
+    existing?.advanceBonusB,
+    fixture.matchId,
+  ]);
 
   const handleSave = (e) => {
     e.preventDefault();
@@ -159,8 +189,12 @@ function FixtureResultRow({ fixture, existing, dispatch }) {
       scoreB,
       penalties: isDraw && penalties,
       penaltyWinner: isDraw && penalties ? penaltyWinner : null,
-      round: 'Group Stage',
+      round,
       fixtureId: fixtureId(fixture),
+      ...(enableAdvanceBonus && {
+        advanceBonusA,
+        advanceBonusB,
+      }),
     };
 
     if (existing) {
@@ -183,8 +217,8 @@ function FixtureResultRow({ fixture, existing, dispatch }) {
     >
       <div className="fixture-row__meta">
         <span className="fixture-row__date">{fixture.date}</span>
-        <span className="fixture-row__time">{fixture.time}</span>
-        <span className="fixture-row__group">{fixture.group}</span>
+        {fixture.time && <span className="fixture-row__time">{fixture.time}</span>}
+        <span className="fixture-row__group">{fixture.group || fixture.round}</span>
       </div>
       <div className="admin-fixture-row__entry">
         <TeamLine name={fixture.team1} />
@@ -212,7 +246,7 @@ function FixtureResultRow({ fixture, existing, dispatch }) {
           {saved ? 'Saved' : played ? 'Update' : 'Save'}
         </button>
       </div>
-      {isDraw && (
+      {(isDraw || enableAdvanceBonus) && (
         <div className="admin-fixture-row__extras">
           <MatchScoringOptions
             teamA={teamA}
@@ -221,15 +255,15 @@ function FixtureResultRow({ fixture, existing, dispatch }) {
             teamBLabel={fixture.team2}
             scoreA={scoreA}
             scoreB={scoreB}
-            round="Group Stage"
+            round={round}
             penalties={penalties}
             penaltyWinner={penaltyWinner}
-            advanceBonusA={false}
-            advanceBonusB={false}
+            advanceBonusA={advanceBonusA}
+            advanceBonusB={advanceBonusB}
             onPenaltiesChange={setPenalties}
             onPenaltyWinnerChange={setPenaltyWinner}
-            onAdvanceBonusAChange={() => {}}
-            onAdvanceBonusBChange={() => {}}
+            onAdvanceBonusAChange={enableAdvanceBonus ? setAdvanceBonusA : () => {}}
+            onAdvanceBonusBChange={enableAdvanceBonus ? setAdvanceBonusB : () => {}}
             penaltyWinnerName={`penalty-${fixtureId(fixture)}`}
           />
         </div>
@@ -293,6 +327,51 @@ export default function Admin({ state, dispatch }) {
 
   const handleKnockoutChange = (field, value) => {
     setKnockout((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveAllRoundOf32 = () => {
+    let savedCount = 0;
+
+    for (const fixture of ROUND_OF_32_FIXTURES) {
+      const existing = findMatchResult(state.matches, fixture.team1, fixture.team2);
+      if (existing) continue;
+
+      const teamA = fromFixtureName(fixture.team1);
+      const teamB = fromFixtureName(fixture.team2);
+      const defaults = fixture.defaultResult;
+      if (!defaults) continue;
+
+      const scoreA = defaults.scoreA;
+      const scoreB = defaults.scoreB;
+      const isDraw = scoreA === scoreB;
+      const penaltyWinner =
+        defaults.penaltyWinner != null
+          ? fromFixtureName(defaults.penaltyWinner)
+          : null;
+
+      dispatch({
+        type: 'ADD_MATCH',
+        teamA,
+        teamB,
+        scoreA,
+        scoreB,
+        penalties: isDraw && Boolean(defaults.penalties),
+        penaltyWinner: isDraw && defaults.penalties ? penaltyWinner : null,
+        round: 'Round of 32',
+        fixtureId: fixtureId(fixture),
+        advanceBonusA: true,
+        advanceBonusB: true,
+      });
+      savedCount += 1;
+    }
+
+    if (savedCount === 0) {
+      setError('All Round of 32 results are already saved');
+      return;
+    }
+
+    setError('');
+    alert(`Saved ${savedCount} Round of 32 result${savedCount === 1 ? '' : 's'}`);
   };
 
   const handleKnockoutSubmit = (e) => {
@@ -430,8 +509,35 @@ export default function Admin({ state, dispatch }) {
       </div>
 
       <div className="knockout-section admin-knockout-section">
-        <h3>Knockout Match</h3>
-        <p className="section__subtitle">Add knockout results not listed in group fixtures</p>
+        <h3>Round of 32</h3>
+        <p className="section__subtitle">16 knockout fixtures · scores pre-filled from results</p>
+        <button
+          type="button"
+          className="btn btn--primary btn--full"
+          onClick={handleSaveAllRoundOf32}
+        >
+          Save all Round of 32 results
+        </button>
+        <div className="fixtures-list admin-fixtures-list">
+          {ROUND_OF_32_FIXTURES.map((fixture) => {
+            const existing = findMatchResult(state.matches, fixture.team1, fixture.team2);
+            return (
+              <FixtureResultRow
+                key={fixtureId(fixture)}
+                fixture={fixture}
+                existing={existing}
+                dispatch={dispatch}
+                round="Round of 32"
+                enableAdvanceBonus
+              />
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="knockout-section admin-knockout-section">
+        <h3>Other Knockout Matches</h3>
+        <p className="section__subtitle">Add Round of 16, quarter-finals, and later results</p>
 
         <form className="match-form" onSubmit={handleKnockoutSubmit}>
           <div className="form-row">

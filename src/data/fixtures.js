@@ -72,3 +72,22 @@ export const GROUP_FIXTURES = [
   { round: 'Matchday 17', date: '2026-06-27', time: '17:00 UTC-4', team1: 'Panama', team2: 'England', group: 'Group L', ground: 'New York/New Jersey (East Rutherford)' },
   { round: 'Matchday 17', date: '2026-06-27', time: '17:00 UTC-4', team1: 'Croatia', team2: 'Ghana', group: 'Group L', ground: 'Philadelphia' },
 ];
+
+export const ROUND_OF_32_FIXTURES = [
+  { matchId: 'M73', date: '2026-06-28', team1: 'South Africa', team2: 'Canada', round: 'Round of 32', ground: 'Los Angeles Stadium', defaultResult: { scoreA: 0, scoreB: 1 } },
+  { matchId: 'M74', date: '2026-06-29', team1: 'Brazil', team2: 'Japan', round: 'Round of 32', ground: 'Houston Stadium', defaultResult: { scoreA: 2, scoreB: 1 } },
+  { matchId: 'M75', date: '2026-06-29', team1: 'Germany', team2: 'Paraguay', round: 'Round of 32', ground: 'Boston Stadium', defaultResult: { scoreA: 1, scoreB: 1, penalties: true, penaltyWinner: 'Paraguay' } },
+  { matchId: 'M76', date: '2026-06-29', team1: 'Netherlands', team2: 'Morocco', round: 'Round of 32', ground: 'Monterrey Stadium', defaultResult: { scoreA: 1, scoreB: 1, penalties: true, penaltyWinner: 'Morocco' } },
+  { matchId: 'M77', date: '2026-06-30', team1: 'Ivory Coast', team2: 'Norway', round: 'Round of 32', ground: 'Dallas Stadium', defaultResult: { scoreA: 1, scoreB: 2 } },
+  { matchId: 'M78', date: '2026-06-30', team1: 'France', team2: 'Sweden', round: 'Round of 32', ground: 'New York New Jersey Stadium', defaultResult: { scoreA: 3, scoreB: 0 } },
+  { matchId: 'M79', date: '2026-06-30', team1: 'Mexico', team2: 'Ecuador', round: 'Round of 32', ground: 'Mexico City Stadium', defaultResult: { scoreA: 2, scoreB: 0 } },
+  { matchId: 'M80', date: '2026-07-01', team1: 'England', team2: 'DR Congo', round: 'Round of 32', ground: 'Atlanta Stadium', defaultResult: { scoreA: 2, scoreB: 1 } },
+  { matchId: 'M81', date: '2026-07-01', team1: 'Belgium', team2: 'Senegal', round: 'Round of 32', ground: 'Seattle Stadium', defaultResult: { scoreA: 3, scoreB: 2 } },
+  { matchId: 'M82', date: '2026-07-01', team1: 'USA', team2: 'Bosnia & Herzegovina', round: 'Round of 32', ground: 'San Francisco Bay Area Stadium', defaultResult: { scoreA: 2, scoreB: 0 } },
+  { matchId: 'M83', date: '2026-07-02', team1: 'Spain', team2: 'Austria', round: 'Round of 32', ground: 'Los Angeles Stadium', defaultResult: { scoreA: 3, scoreB: 0 } },
+  { matchId: 'M84', date: '2026-07-02', team1: 'Portugal', team2: 'Croatia', round: 'Round of 32', ground: 'Toronto Stadium', defaultResult: { scoreA: 2, scoreB: 1 } },
+  { matchId: 'M85', date: '2026-07-02', team1: 'Switzerland', team2: 'Algeria', round: 'Round of 32', ground: 'BC Place Vancouver', defaultResult: { scoreA: 2, scoreB: 0 } },
+  { matchId: 'M86', date: '2026-07-03', team1: 'Australia', team2: 'Egypt', round: 'Round of 32', ground: 'Dallas Stadium', defaultResult: { scoreA: 1, scoreB: 1, penalties: true, penaltyWinner: 'Egypt' } },
+  { matchId: 'M87', date: '2026-07-03', team1: 'Argentina', team2: 'Cape Verde', round: 'Round of 32', ground: 'Miami Stadium', defaultResult: { scoreA: 3, scoreB: 2 } },
+  { matchId: 'M88', date: '2026-07-03', team1: 'Colombia', team2: 'Ghana', round: 'Round of 32', ground: 'Kansas City Stadium', defaultResult: { scoreA: 1, scoreB: 0 } },
+];
