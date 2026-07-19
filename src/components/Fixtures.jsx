@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { GROUP_FIXTURES, ROUND_OF_32_FIXTURES } from '../data/fixtures';
+import { GROUP_FIXTURES, ROUND_OF_32_FIXTURES, ROUND_OF_16_FIXTURES, QUARTER_FINAL_FIXTURES } from '../data/fixtures';
 import { GROUPS } from '../data/groups';
 import { toFixtureName } from '../data/teams';
 import { findMatchResult } from '../utils/matches';
@@ -84,6 +84,76 @@ export default function Fixtures({ state }) {
         <h3>Round of 32</h3>
         <div className="fixtures-list">
           {ROUND_OF_32_FIXTURES.map((fixture) => {
+            const result = findMatchResult(matches, fixture.team1, fixture.team2);
+            const played = Boolean(result);
+
+            return (
+              <div
+                key={fixture.matchId}
+                className={`fixture-row ${played ? 'fixture-row--played' : ''}`}
+              >
+                <div className="fixture-row__meta">
+                  <span className="fixture-row__date">{fixture.date}</span>
+                  <span className="fixture-row__group">{fixture.round}</span>
+                </div>
+                <div className="fixture-row__match">
+                  <TeamLine name={fixture.team1} />
+                  {played ? (
+                    <span className="fixture-score">
+                      {result.scoreA} – {result.scoreB}
+                      {result.penalties && ' (p)'}
+                    </span>
+                  ) : (
+                    <span className="fixture-vs">vs</span>
+                  )}
+                  <TeamLine name={fixture.team2} />
+                </div>
+                <div className="fixture-row__venue">{fixture.ground}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="knockout-section">
+        <h3>Round of 16</h3>
+        <div className="fixtures-list">
+          {ROUND_OF_16_FIXTURES.map((fixture) => {
+            const result = findMatchResult(matches, fixture.team1, fixture.team2);
+            const played = Boolean(result);
+
+            return (
+              <div
+                key={fixture.matchId}
+                className={`fixture-row ${played ? 'fixture-row--played' : ''}`}
+              >
+                <div className="fixture-row__meta">
+                  <span className="fixture-row__date">{fixture.date}</span>
+                  <span className="fixture-row__group">{fixture.round}</span>
+                </div>
+                <div className="fixture-row__match">
+                  <TeamLine name={fixture.team1} />
+                  {played ? (
+                    <span className="fixture-score">
+                      {result.scoreA} – {result.scoreB}
+                      {result.penalties && ' (p)'}
+                    </span>
+                  ) : (
+                    <span className="fixture-vs">vs</span>
+                  )}
+                  <TeamLine name={fixture.team2} />
+                </div>
+                <div className="fixture-row__venue">{fixture.ground}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="knockout-section">
+        <h3>Quarter-Final</h3>
+        <div className="fixtures-list">
+          {QUARTER_FINAL_FIXTURES.map((fixture) => {
             const result = findMatchResult(matches, fixture.team1, fixture.team2);
             const played = Boolean(result);
 

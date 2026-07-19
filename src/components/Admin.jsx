@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { GROUP_FIXTURES, ROUND_OF_32_FIXTURES } from '../data/fixtures';
+import { GROUP_FIXTURES, ROUND_OF_32_FIXTURES, ROUND_OF_16_FIXTURES, QUARTER_FINAL_FIXTURES } from '../data/fixtures';
 import { GROUPS } from '../data/groups';
 import { ADMIN_PIN, ALL_TEAMS, ROUNDS, fromFixtureName } from '../data/teams';
 import { findMatchResult, fixtureId } from '../utils/matches';
@@ -374,6 +374,96 @@ export default function Admin({ state, dispatch }) {
     alert(`Saved ${savedCount} Round of 32 result${savedCount === 1 ? '' : 's'}`);
   };
 
+  const handleSaveAllRoundOf16 = () => {
+    let savedCount = 0;
+
+    for (const fixture of ROUND_OF_16_FIXTURES) {
+      const existing = findMatchResult(state.matches, fixture.team1, fixture.team2);
+      if (existing) continue;
+
+      const teamA = fromFixtureName(fixture.team1);
+      const teamB = fromFixtureName(fixture.team2);
+      const defaults = fixture.defaultResult;
+      if (!defaults) continue;
+
+      const scoreA = defaults.scoreA;
+      const scoreB = defaults.scoreB;
+      const isDraw = scoreA === scoreB;
+      const penaltyWinner =
+        defaults.penaltyWinner != null
+          ? fromFixtureName(defaults.penaltyWinner)
+          : null;
+
+      dispatch({
+        type: 'ADD_MATCH',
+        teamA,
+        teamB,
+        scoreA,
+        scoreB,
+        penalties: isDraw && Boolean(defaults.penalties),
+        penaltyWinner: isDraw && defaults.penalties ? penaltyWinner : null,
+        round: 'Round of 16',
+        fixtureId: fixtureId(fixture),
+        advanceBonusA: true,
+        advanceBonusB: true,
+      });
+      savedCount += 1;
+    }
+
+    if (savedCount === 0) {
+      setError('All Round of 16 results are already saved');
+      return;
+    }
+
+    setError('');
+    alert(`Saved ${savedCount} Round of 16 result${savedCount === 1 ? '' : 's'}`);
+  };
+
+  const handleSaveAllQuarterFinals = () => {
+    let savedCount = 0;
+
+    for (const fixture of QUARTER_FINAL_FIXTURES) {
+      const existing = findMatchResult(state.matches, fixture.team1, fixture.team2);
+      if (existing) continue;
+
+      const teamA = fromFixtureName(fixture.team1);
+      const teamB = fromFixtureName(fixture.team2);
+      const defaults = fixture.defaultResult;
+      if (!defaults) continue;
+
+      const scoreA = defaults.scoreA;
+      const scoreB = defaults.scoreB;
+      const isDraw = scoreA === scoreB;
+      const penaltyWinner =
+        defaults.penaltyWinner != null
+          ? fromFixtureName(defaults.penaltyWinner)
+          : null;
+
+      dispatch({
+        type: 'ADD_MATCH',
+        teamA,
+        teamB,
+        scoreA,
+        scoreB,
+        penalties: isDraw && Boolean(defaults.penalties),
+        penaltyWinner: isDraw && defaults.penalties ? penaltyWinner : null,
+        round: 'Quarter-Final',
+        fixtureId: fixtureId(fixture),
+        advanceBonusA: true,
+        advanceBonusB: true,
+      });
+      savedCount += 1;
+    }
+
+    if (savedCount === 0) {
+      setError('All Quarter-Final results are already saved');
+      return;
+    }
+
+    setError('');
+    alert(`Saved ${savedCount} Quarter-Final result${savedCount === 1 ? '' : 's'}`);
+  };
+
   const handleKnockoutSubmit = (e) => {
     e.preventDefault();
     setError('');
@@ -528,6 +618,60 @@ export default function Admin({ state, dispatch }) {
                 existing={existing}
                 dispatch={dispatch}
                 round="Round of 32"
+                enableAdvanceBonus
+              />
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="knockout-section admin-knockout-section">
+        <h3>Round of 16</h3>
+        <p className="section__subtitle">8 knockout fixtures · scores pre-filled from results</p>
+        <button
+          type="button"
+          className="btn btn--primary btn--full"
+          onClick={handleSaveAllRoundOf16}
+        >
+          Save all Round of 16 results
+        </button>
+        <div className="fixtures-list admin-fixtures-list">
+          {ROUND_OF_16_FIXTURES.map((fixture) => {
+            const existing = findMatchResult(state.matches, fixture.team1, fixture.team2);
+            return (
+              <FixtureResultRow
+                key={fixtureId(fixture)}
+                fixture={fixture}
+                existing={existing}
+                dispatch={dispatch}
+                round="Round of 16"
+                enableAdvanceBonus
+              />
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="knockout-section admin-knockout-section">
+        <h3>Quarter-Final</h3>
+        <p className="section__subtitle">4 knockout fixtures · scores pre-filled from results</p>
+        <button
+          type="button"
+          className="btn btn--primary btn--full"
+          onClick={handleSaveAllQuarterFinals}
+        >
+          Save all Quarter-Final results
+        </button>
+        <div className="fixtures-list admin-fixtures-list">
+          {QUARTER_FINAL_FIXTURES.map((fixture) => {
+            const existing = findMatchResult(state.matches, fixture.team1, fixture.team2);
+            return (
+              <FixtureResultRow
+                key={fixtureId(fixture)}
+                fixture={fixture}
+                existing={existing}
+                dispatch={dispatch}
+                round="Quarter-Final"
                 enableAdvanceBonus
               />
             );
