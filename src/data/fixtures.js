@@ -205,3 +205,24 @@ export const QUARTER_FINAL_FIXTURES = [
     defaultResult: { scoreA: 3, scoreB: 1 },
   },
 ];
+
+export const SEMI_FINAL_FIXTURES = [
+  {
+    matchId: 'WC2026_SF_1',
+    date: '2026-07-14',
+    team1: 'France',
+    team2: 'Spain',
+    round: 'Semi-Final',
+    ground: 'Dallas Stadium, Texas',
+    defaultResult: { scoreA: 0, scoreB: 2 },
+  },
+  {
+    matchId: 'WC2026_SF_2',
+    date: '2026-07-15',
+    team1: 'England',
+    team2: 'Argentina',
+    round: 'Semi-Final',
+    ground: 'Atlanta Stadium, Georgia',
+    defaultResult: { scoreA: 1, scoreB: 2 },
+  },
+];

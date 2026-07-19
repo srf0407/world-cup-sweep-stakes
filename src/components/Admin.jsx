@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { GROUP_FIXTURES, ROUND_OF_32_FIXTURES, ROUND_OF_16_FIXTURES, QUARTER_FINAL_FIXTURES } from '../data/fixtures';
+import { GROUP_FIXTURES, ROUND_OF_32_FIXTURES, ROUND_OF_16_FIXTURES, QUARTER_FINAL_FIXTURES, SEMI_FINAL_FIXTURES } from '../data/fixtures';
 import { GROUPS } from '../data/groups';
 import { ADMIN_PIN, ALL_TEAMS, ROUNDS, fromFixtureName } from '../data/teams';
 import { findMatchResult, fixtureId } from '../utils/matches';
@@ -464,6 +464,51 @@ export default function Admin({ state, dispatch }) {
     alert(`Saved ${savedCount} Quarter-Final result${savedCount === 1 ? '' : 's'}`);
   };
 
+  const handleSaveAllSemiFinals = () => {
+    let savedCount = 0;
+
+    for (const fixture of SEMI_FINAL_FIXTURES) {
+      const existing = findMatchResult(state.matches, fixture.team1, fixture.team2);
+      if (existing) continue;
+
+      const teamA = fromFixtureName(fixture.team1);
+      const teamB = fromFixtureName(fixture.team2);
+      const defaults = fixture.defaultResult;
+      if (!defaults) continue;
+
+      const scoreA = defaults.scoreA;
+      const scoreB = defaults.scoreB;
+      const isDraw = scoreA === scoreB;
+      const penaltyWinner =
+        defaults.penaltyWinner != null
+          ? fromFixtureName(defaults.penaltyWinner)
+          : null;
+
+      dispatch({
+        type: 'ADD_MATCH',
+        teamA,
+        teamB,
+        scoreA,
+        scoreB,
+        penalties: isDraw && Boolean(defaults.penalties),
+        penaltyWinner: isDraw && defaults.penalties ? penaltyWinner : null,
+        round: 'Semi-Final',
+        fixtureId: fixtureId(fixture),
+        advanceBonusA: true,
+        advanceBonusB: true,
+      });
+      savedCount += 1;
+    }
+
+    if (savedCount === 0) {
+      setError('All Semi-Final results are already saved');
+      return;
+    }
+
+    setError('');
+    alert(`Saved ${savedCount} Semi-Final result${savedCount === 1 ? '' : 's'}`);
+  };
+
   const handleKnockoutSubmit = (e) => {
     e.preventDefault();
     setError('');
@@ -672,6 +717,33 @@ export default function Admin({ state, dispatch }) {
                 existing={existing}
                 dispatch={dispatch}
                 round="Quarter-Final"
+                enableAdvanceBonus
+              />
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="knockout-section admin-knockout-section">
+        <h3>Semi-Final</h3>
+        <p className="section__subtitle">2 knockout fixtures · scores pre-filled from results</p>
+        <button
+          type="button"
+          className="btn btn--primary btn--full"
+          onClick={handleSaveAllSemiFinals}
+        >
+          Save all Semi-Final results
+        </button>
+        <div className="fixtures-list admin-fixtures-list">
+          {SEMI_FINAL_FIXTURES.map((fixture) => {
+            const existing = findMatchResult(state.matches, fixture.team1, fixture.team2);
+            return (
+              <FixtureResultRow
+                key={fixtureId(fixture)}
+                fixture={fixture}
+                existing={existing}
+                dispatch={dispatch}
+                round="Semi-Final"
                 enableAdvanceBonus
               />
             );
